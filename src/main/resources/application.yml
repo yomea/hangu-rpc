@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: hanggu-gateway
+server:
+  port: 8083
+  servlet:
+    context-path: /${spring.application.name}
+
+log:
+  home: /data/hanggu-gateway/${spring.application.name}
+  level: debug
