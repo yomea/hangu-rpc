@@ -1,5 +1,9 @@
 package com.hanggu.common.util;
 
+import com.hanggu.common.entity.Request;
+import com.hanggu.common.entity.Response;
+import com.hanggu.common.entity.RpcResponseTransport;
+
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -18,6 +22,26 @@ public final class CommonUtils {
 
         return Arrays.asList(groupName, interfaceName, version)
             .stream().filter(e -> Objects.nonNull(e) && !e.trim().isEmpty()).collect(Collectors.joining("/"));
+    }
+
+    public static Response createResponseInfo(
+            Long id,
+            byte serializationType,
+            int code,
+            Class<?> clzz,
+            Object value) {
+
+        RpcResponseTransport rpcResponseTransport = new RpcResponseTransport();
+        rpcResponseTransport.setCode(code);
+        rpcResponseTransport.setType(clzz);
+        rpcResponseTransport.setVale(value);
+        // 返回响应
+        Response response = new Response();
+        response.setId(id);
+        response.setSerializationType(serializationType);
+        response.setRpcResponseTransport(rpcResponseTransport);
+
+        return response;
     }
 
 }

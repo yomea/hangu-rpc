@@ -1,5 +1,7 @@
 package com.hanggu.provider.manager;
 
+import com.hanggu.provider.invoker.RpcInvoker;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,20 +15,20 @@ public class LocalServiceManager {
 
     private static final int DEFAULT_SIZE = 1024;
 
-    private static final Map<String, Object> SERVICE_CACHE = new ConcurrentHashMap<>(DEFAULT_SIZE);
+    private static final Map<String, RpcInvoker> SERVICE_CACHE = new ConcurrentHashMap<>(DEFAULT_SIZE);
 
-    public static void register(String key, Object service) {
+    public static void register(String key, RpcInvoker rpcInvoker) {
 
-        SERVICE_CACHE.put(key, service);
+        SERVICE_CACHE.put(key, rpcInvoker);
 //        service.getClass().getMethod()
     }
 
-    public static Object get(String key) {
+    public static RpcInvoker get(String key) {
 
         return SERVICE_CACHE.get(key);
     }
 
-    public static Object remove(String key) {
+    public static RpcInvoker remove(String key) {
 
         return SERVICE_CACHE.remove(key);
     }

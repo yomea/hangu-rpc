@@ -1,33 +1,26 @@
 package com.hanggu.common.channel.handler;
 
 import com.hanggu.common.constant.HangguCons;
-import com.hanggu.common.entity.ParameterInfo;
-import com.hanggu.common.entity.PingPong;
-import com.hanggu.common.entity.Request;
 import com.hanggu.common.entity.Response;
-import com.hanggu.common.entity.RpcRequestTransport;
 import com.hanggu.common.entity.RpcResponseTransport;
 import com.hanggu.common.enums.MsgTypeMarkEnum;
 import com.hanggu.common.enums.SerializationTypeEnum;
-import com.hanggu.common.serialization.SerialInput;
 import com.hanggu.common.serialization.SerialOutput;
 import com.hanggu.common.util.DescClassUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.ByteArrayOutputStream;
+import java.util.List;
 
 @Slf4j
 public class ResponseMessageEncoder extends MessageToMessageCodec<ByteBuf, Response> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, Response response, List<Object> out) throws Exception {
+
         ByteBuf byteBuf = ctx.alloc().buffer();
         // 魔数 2bytes
         byteBuf.writeShort(HangguCons.MAGIC);
@@ -60,12 +53,13 @@ public class ResponseMessageEncoder extends MessageToMessageCodec<ByteBuf, Respo
     }
 
     @Override
-    protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
+
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        log.error("请求编码失败！", cause);
+        log.error("响应编码失败！");
         super.exceptionCaught(ctx, cause);
     }
 }

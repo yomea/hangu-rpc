@@ -20,6 +20,11 @@ public class Hessian2SerialOutput implements SerialOutput {
     }
 
     @Override
+    public void writeInt(int v) throws IOException {
+        output.writeInt(v);
+    }
+
+    @Override
     public void writeObject(Object obj) throws IOException {
         output.writeObject(obj);
     }
