@@ -1,7 +1,7 @@
 package com.hanggu.provider.server;
 
 import com.hanggu.common.channel.handler.HeartBeatMsgHandler;
-import com.hanggu.common.channel.handler.ProtocolMessageCoder;
+import com.hanggu.common.channel.handler.RequestMessageEncoder;
 import com.hanggu.provider.channel.handler.RequestMessageHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -42,7 +42,7 @@ public class NettyServerBoostrap {
                     @Override
                     protected void initChannel(SocketChannel ch) {
                         ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(2048, 11, 4, 0, 0));
-                        ch.pipeline().addLast(new ProtocolMessageCoder());
+                        ch.pipeline().addLast(new RequestMessageEncoder());
                         ch.pipeline().addLast(new IdleStateHandler(0, 0, 4, TimeUnit.SECONDS));
                         ch.pipeline().addLast(new HeartBeatMsgHandler());
                         ch.pipeline().addLast(new RequestMessageHandler(executor));

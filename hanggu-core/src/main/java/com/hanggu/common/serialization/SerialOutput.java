@@ -8,6 +8,8 @@ import java.io.IOException;
  */
 public interface SerialOutput {
 
+    void writeInt(int v) throws IOException;
+
     void writeObject(Object obj) throws IOException;
 
     void writeString(String text) throws IOException;

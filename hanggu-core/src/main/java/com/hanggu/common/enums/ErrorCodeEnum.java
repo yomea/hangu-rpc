@@ -12,7 +12,7 @@ import lombok.Getter;
 public enum ErrorCodeEnum {
 
     SUCCESS(200, "请求成功！"),
-    NOT_FOUND(404, "字段不存在!");
+    NOT_FOUND(404, "服务不存在!");
 
     private Integer code;
 
