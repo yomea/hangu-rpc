@@ -16,4 +16,23 @@ import java.lang.annotation.Target;
 @Documented
 public @interface HangguService {
 
+    /**
+     * 组名
+     */
+    String groupName() default "";
+
+    /**
+     *
+     * 接口名，可以自定义，如果为空，那么将自动使用该类继承的接口作为名字
+     */
+    String interfaceName() default "";
+
+
+    /**
+     *
+     * 版本号
+     */
+    String version() default "";
+
+
 }

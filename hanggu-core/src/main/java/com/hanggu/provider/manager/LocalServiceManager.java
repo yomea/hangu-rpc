@@ -20,4 +20,14 @@ public class LocalServiceManager {
         SERVICE_CACHE.put(key, service);
 //        service.getClass().getMethod()
     }
+
+    public static Object get(String key) {
+
+        return SERVICE_CACHE.get(key);
+    }
+
+    public static Object remove(String key) {
+
+        return SERVICE_CACHE.remove(key);
+    }
 }
