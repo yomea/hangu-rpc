@@ -10,6 +10,11 @@ public class RpcInvokerException extends RuntimeException {
 
     private int code;
 
+    public RpcInvokerException(int code, String msg) {
+        super(msg);
+        this.code = code;
+    }
+
     public RpcInvokerException(int code, String msg, Throwable cause) {
         super(msg, cause);
         this.code = code;

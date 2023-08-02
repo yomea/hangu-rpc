@@ -1,10 +1,11 @@
 package com.hanggu.provider.listener;
 
+import com.hanggu.common.manager.HanguRpcManager;
 import com.hanggu.provider.annotation.HangguService;
 import com.hanggu.provider.invoker.RpcInvoker;
 import com.hanggu.provider.manager.LocalServiceManager;
 import com.hanggu.provider.properties.ProviderProperties;
-import com.hanggu.provider.server.NettyServerBoostrap;
+import com.hanggu.provider.server.NettyServer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -66,7 +67,6 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
             });
         });
 
-        NettyServerBoostrap nettyServerBoostrap = new NettyServerBoostrap();
-        nettyServerBoostrap.start(providerProperties, rpcInvokerExecutor);
+        HanguRpcManager.openServer(providerProperties, rpcInvokerExecutor);
     }
 }

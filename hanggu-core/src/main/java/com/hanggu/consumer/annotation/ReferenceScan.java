@@ -1,24 +1,24 @@
 package com.hanggu.consumer.annotation;
 
+import com.hanggu.consumer.scaner.ReferenceScannerRegistrar;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.springframework.context.annotation.Import;
 
 /**
- * rpc 服务引入
  * @author wuzhenhong
- * @date 2023/7/31 14:57
+ * @date 2023/8/2 13:27
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-public @interface HangguReference {
+@Import(ReferenceScannerRegistrar.class)
+public @interface ReferenceScan {
 
-    String groupName() default "";
+    String[] basePackages() default {};
 
-    String interfaceName() default "";
-
-    String version() default "";
+    Class<?>[] basePackageClasses() default {};
 }

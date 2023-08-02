@@ -41,7 +41,6 @@ public class ReferenceScannerConfigurer implements BeanDefinitionRegistryPostPro
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-
     }
 
     @Override
@@ -52,5 +51,13 @@ public class ReferenceScannerConfigurer implements BeanDefinitionRegistryPostPro
     @Override
     public void setEnvironment(Environment environment) {
         this.environment = environment;
+    }
+
+    public String getBasePackage() {
+        return basePackage;
+    }
+
+    public void setBasePackage(String basePackage) {
+        this.basePackage = basePackage;
     }
 }

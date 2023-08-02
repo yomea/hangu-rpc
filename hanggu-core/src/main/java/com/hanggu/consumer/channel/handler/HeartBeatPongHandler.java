@@ -26,7 +26,6 @@ public class HeartBeatPongHandler extends SimpleChannelInboundHandler<PingPong> 
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, PingPong pingPong) throws Exception {
-
     }
 
     @Override

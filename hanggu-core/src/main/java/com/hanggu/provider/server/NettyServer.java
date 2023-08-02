@@ -1,6 +1,7 @@
 package com.hanggu.provider.server;
 
 import com.hanggu.common.channel.handler.ByteFrameDecoder;
+import com.hanggu.common.channel.handler.HeartBeatEncoder;
 import com.hanggu.common.constant.HangguCons;
 import com.hanggu.provider.channel.handler.HeartBeatPingHandler;
 import com.hanggu.provider.channel.handler.RequestMessageHandler;
@@ -26,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * @date 2023/7/31 15:23
  */
 @Slf4j
-public class NettyServerBoostrap {
+public class NettyServer {
 
     private ServerBootstrap serverBootstrap;
 
@@ -51,12 +52,14 @@ public class NettyServerBoostrap {
                     @Override
                     protected void initChannel(SocketChannel ch) {
                         ch.pipeline().addLast("logging", new LoggingHandler(LogLevel.INFO))
-                            // 读写时间超过4s，表示该链接已失效
-                            .addLast(new IdleStateHandler(0, 0, 8, TimeUnit.SECONDS))
                             // 继承 LengthFieldBasedFrameDecoder 用于拆包
                             .addLast(new ByteFrameDecoder())
                             // 用于编解码
                             .addLast(new ResponseMessageCodec())
+                            // 用于心跳编码
+                            .addLast(new HeartBeatEncoder())
+                            // 读写时间超过4s，表示该链接已失效
+                            .addLast(new IdleStateHandler(0, 0, 8, TimeUnit.SECONDS))
                             // 心跳处理器
                             .addLast(new HeartBeatPingHandler())
                             // 请求事件处理器，用于调用业务逻辑

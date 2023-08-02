@@ -25,7 +25,7 @@ public final class CommonUtils {
         return ATOMIC_LONG.incrementAndGet();
     }
 
-    public static final String createServiceKey(String groupName, String interfaceName, String version) {
+    public static String createServiceKey(String groupName, String interfaceName, String version) {
 
         return groupName + "/" + version + "/" + interfaceName;
     }

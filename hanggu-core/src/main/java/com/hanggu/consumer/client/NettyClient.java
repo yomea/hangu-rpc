@@ -29,11 +29,12 @@ public class NettyClient {
 
     private Bootstrap bootstrap;
 
-    private NioEventLoopGroup nioEventLoopGroup = new NioEventLoopGroup(HangguCons.DEF_IO_THREADS << 3);
+    private NioEventLoopGroup nioEventLoopGroup;
 
     public void start() {
         try {
             bootstrap = new Bootstrap();
+            nioEventLoopGroup = new NioEventLoopGroup(HangguCons.DEF_IO_THREADS << 3);
             bootstrap.group(nioEventLoopGroup)
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.TCP_NODELAY, true)
@@ -46,17 +47,24 @@ public class NettyClient {
                     protected void initChannel(Channel ch) throws Exception {
                         ch.pipeline()
                             .addLast("logging", new LoggingHandler(LogLevel.INFO))
-                            // 写超时定义为2s，HeartBeatPongHandler 将会接收到写超时事件，此时主动向服务器发送心跳
-                            .addLast(new IdleStateHandler(4, 2, 0, TimeUnit.SECONDS))
                             .addLast(new ByteFrameDecoder())
                             .addLast(new RequestMessageCodec()) // 请求与响应编解码器
                             .addLast(new HeartBeatEncoder()) // 心跳编码器
+                            // 写超时定义为2s，HeartBeatPongHandler 将会接收到写超时事件，此时主动向服务器发送心跳
+                            .addLast(new IdleStateHandler(4, 2, 0, TimeUnit.SECONDS))
                             .addLast(new HeartBeatPongHandler(NettyClient.this)) // 心跳编码器
                             .addLast(new ResponseMessageHandler());
                     }
                 });
         } catch (Exception e) {
             log.error("rpc客户端启动失败！", e);
+            this.close();
+        }
+    }
+
+    private void close() {
+        if(nioEventLoopGroup != null) {
+            nioEventLoopGroup.shutdownGracefully();
         }
     }
 
