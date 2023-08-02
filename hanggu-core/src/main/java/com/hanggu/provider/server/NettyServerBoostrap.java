@@ -1,10 +1,10 @@
 package com.hanggu.provider.server;
 
-import com.hanggu.common.channel.handler.CommonMessageDecoder;
-import com.hanggu.common.channel.handler.HeartBeatMsgHandler;
-import com.hanggu.common.channel.handler.ResponseMessageEncoder;
+import com.hanggu.common.channel.handler.ByteFrameDecoder;
 import com.hanggu.common.constant.HangguCons;
+import com.hanggu.provider.channel.handler.HeartBeatPingHandler;
 import com.hanggu.provider.channel.handler.RequestMessageHandler;
+import com.hanggu.provider.channel.handler.ResponseMessageCodec;
 import com.hanggu.provider.properties.ProviderProperties;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -14,12 +14,12 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author wuzhenhong
@@ -43,22 +43,27 @@ public class NettyServerBoostrap {
         try {
             serverBootstrap = new ServerBootstrap();
             serverBootstrap.channel(NioServerSocketChannel.class)
-                    .group(boss, worker)
-                    .childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)
-                    .childOption(ChannelOption.SO_REUSEADDR, Boolean.TRUE)
-                    .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                    .childHandler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        protected void initChannel(SocketChannel ch) {
-                            ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(2048, 11, 4, 0, 0));
-                            ch.pipeline().addLast(new ResponseMessageEncoder());
-                            ch.pipeline().addLast(new CommonMessageDecoder());
-                            ch.pipeline().addLast(new IdleStateHandler(0, 0, 4, TimeUnit.SECONDS));
-                            ch.pipeline().addLast(new HeartBeatMsgHandler());
-                            ch.pipeline().addLast(new RequestMessageHandler(executor));
-                        }
-                    });
-            channel = serverBootstrap.bind(properties.getPort()).sync().channel();
+                .group(boss, worker)
+                .childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)
+                .childOption(ChannelOption.SO_REUSEADDR, Boolean.TRUE)
+                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                .childHandler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    protected void initChannel(SocketChannel ch) {
+                        ch.pipeline().addLast("logging", new LoggingHandler(LogLevel.INFO))
+                            // 读写时间超过4s，表示该链接已失效
+                            .addLast(new IdleStateHandler(0, 0, 8, TimeUnit.SECONDS))
+                            // 继承 LengthFieldBasedFrameDecoder 用于拆包
+                            .addLast(new ByteFrameDecoder())
+                            // 用于编解码
+                            .addLast(new ResponseMessageCodec())
+                            // 心跳处理器
+                            .addLast(new HeartBeatPingHandler())
+                            // 请求事件处理器，用于调用业务逻辑
+                            .addLast(new RequestMessageHandler(executor));
+                    }
+                });
+            channel = serverBootstrap.bind(properties.getPort()).channel();
         } catch (Exception e) {
             log.error("启动服务失败！", e);
             this.close();

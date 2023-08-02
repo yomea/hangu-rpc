@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Created by wuzhenhong on 2023/8/1 23:49
  */
-@ConfigurationProperties(prefix = "hangu")
+@ConfigurationProperties(prefix = "hangu.provider")
 @Data
 public class ProviderProperties {
 

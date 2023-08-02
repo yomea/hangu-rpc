@@ -10,4 +10,10 @@ import lombok.Data;
 public class PingPong {
 
     private Long id;
+
+    /**
+     * @see com.hanggu.common.enums.SerializationTypeEnum
+     * 序列化类型
+     */
+    private byte serializationType;
 }

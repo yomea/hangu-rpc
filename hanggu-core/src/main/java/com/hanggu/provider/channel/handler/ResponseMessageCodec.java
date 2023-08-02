@@ -1,33 +1,72 @@
-package com.hanggu.common.channel.handler;
+package com.hanggu.provider.channel.handler;
 
 import com.hanggu.common.constant.HangguCons;
-import com.hanggu.common.entity.*;
+import com.hanggu.common.entity.ParameterInfo;
+import com.hanggu.common.entity.PingPong;
+import com.hanggu.common.entity.Request;
+import com.hanggu.common.entity.Response;
+import com.hanggu.common.entity.RpcRequestTransport;
+import com.hanggu.common.entity.RpcResponseTransport;
 import com.hanggu.common.enums.ErrorCodeEnum;
 import com.hanggu.common.enums.MsgTypeMarkEnum;
 import com.hanggu.common.enums.SerializationTypeEnum;
 import com.hanggu.common.exception.RpcInvokerException;
 import com.hanggu.common.serialization.SerialInput;
+import com.hanggu.common.serialization.SerialOutput;
 import com.hanggu.common.util.CommonUtils;
 import com.hanggu.common.util.DescClassUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.ByteArrayOutputStream;
+import java.util.List;
 
 /**
- * Created by wuzhenhong on 2023/8/2 00:48
+ * 响应编码与请求解码
+ * @author wuzhenhong
+ * @date 2023/8/2 9:44
  */
 @Slf4j
-public class CommonMessageDecoder extends MessageToMessageCodec<ByteBuf, ByteBuf> {
-    @Override
-    protected void encode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
+public class ResponseMessageCodec extends MessageToMessageCodec<ByteBuf, Response> {
 
+    @Override
+    protected void encode(ChannelHandlerContext ctx, Response response, List<Object> out) throws Exception {
+
+        ByteBuf byteBuf = ctx.alloc().buffer();
+        // 魔数 2bytes
+        byteBuf.writeShort(HangguCons.MAGIC);
+        // 请求类型，序列化方式 1bytes
+        byte finalMsgType = (byte) (MsgTypeMarkEnum.REQUEST_FLAG.getMark() & 0);
+        byte serializationType = response.getSerializationType();
+        finalMsgType |= serializationType;
+        // 消息类型 1byte
+        byteBuf.writeByte(finalMsgType);
+        // 写入请求id
+        byteBuf.writeLong(response.getId());
+        // 写入内容
+        RpcResponseTransport rpcResponseTransport = response.getRpcResponseTransport();
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            SerialOutput serialOutput = SerializationTypeEnum.getOutputByType(outputStream, serializationType);
+            int code = rpcResponseTransport.getCode();
+            serialOutput.writeInt(code);
+            Class<?> aClass = rpcResponseTransport.getType();
+            String typeDesc = DescClassUtils.getDesc(aClass);
+            serialOutput.writeString(typeDesc);
+            Object value = rpcResponseTransport.getVale();
+            serialOutput.writeObject(value);
+            byte[] contentBuff = outputStream.toByteArray();
+            //内容对象长度 int 4bytes
+            byteBuf.writeInt(contentBuff.length);
+            //内容数据
+            byteBuf.writeBytes(contentBuff);
+        }
+        out.add(byteBuf);
     }
 
     @Override
@@ -53,10 +92,6 @@ public class CommonMessageDecoder extends MessageToMessageCodec<ByteBuf, ByteBuf
 
                 PingPong pingPong = this.dealHeart(id);
                 list.add(pingPong);
-                // 响应
-            } else {
-                Response response = this.dealResponse(id, byteBuf, serialType);
-                list.add(response);
             }
         } catch (RpcInvokerException e) {
             Response response = CommonUtils.createResponseInfo(id, serialType, e.getCode(), e.getClass(), e);
@@ -72,12 +107,6 @@ public class CommonMessageDecoder extends MessageToMessageCodec<ByteBuf, ByteBuf
             ctx.writeAndFlush(response);
             throw e;
         }
-    }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        log.error("请求编码失败！", cause);
-        super.exceptionCaught(ctx, cause);
     }
 
     private Request dealRequest(Long id, ByteBuf byteBuf, byte serialType) throws IOException {
@@ -123,34 +152,15 @@ public class CommonMessageDecoder extends MessageToMessageCodec<ByteBuf, ByteBuf
         return request;
     }
 
-    private Response dealResponse(Long id, ByteBuf byteBuf, byte serialType) throws IOException, ClassNotFoundException {
-
-        int bodyLength = byteBuf.readInt();
-        byte[] body = new byte[bodyLength];
-        // 读取内容
-        byteBuf.readBytes(body);
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(body);
-        SerialInput serialInput = SerializationTypeEnum.getInputByType(inputStream, serialType);
-        // 响应编码
-        int code = serialInput.readInt();
-        String returnDesc = serialInput.readString();
-        Class<?> clss = DescClassUtils.desc2class(returnDesc);
-        Object value = serialInput.readObject(clss);
-        RpcResponseTransport rpcResponseTransport = new RpcResponseTransport();
-        rpcResponseTransport.setCode(code);
-        rpcResponseTransport.setType(clss);
-        rpcResponseTransport.setVale(value);
-        Response response = new Response();
-        response.setId(id);
-        response.setSerializationType(serialType);
-        response.setRpcResponseTransport(rpcResponseTransport);
-
-        return response;
-    }
-
     private PingPong dealHeart(Long id) {
         PingPong pingPong = new PingPong();
         pingPong.setId(id);
         return pingPong;
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        log.error("响应编码失败！");
+        super.exceptionCaught(ctx, cause);
     }
 }

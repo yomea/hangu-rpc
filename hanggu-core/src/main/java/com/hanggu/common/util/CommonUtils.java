@@ -6,6 +6,7 @@ import com.hanggu.common.entity.RpcResponseTransport;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -18,10 +19,15 @@ public final class CommonUtils {
         throw new RuntimeException("不允许实例化！");
     }
 
+    private static final AtomicLong ATOMIC_LONG = new AtomicLong(1);
+
+    public static final Long incrementId() {
+        return ATOMIC_LONG.incrementAndGet();
+    }
+
     public static final String createServiceKey(String groupName, String interfaceName, String version) {
 
-        return Arrays.asList(groupName, interfaceName, version)
-            .stream().filter(e -> Objects.nonNull(e) && !e.trim().isEmpty()).collect(Collectors.joining("/"));
+        return groupName + "/" + version + "/" + interfaceName;
     }
 
     public static Response createResponseInfo(
@@ -42,6 +48,20 @@ public final class CommonUtils {
         response.setRpcResponseTransport(rpcResponseTransport);
 
         return response;
+    }
+
+    public static ClassLoader getClassLoader(Class<?> cls) {
+        ClassLoader cl = null;
+        try {
+            cl = Thread.currentThread().getContextClassLoader();
+        } catch (Throwable ex) {
+            // Cannot access thread context ClassLoader - falling back to system class loader...
+        }
+        if (cl == null) {
+            // No thread context class loader -> use class loader of this class.
+            cl = cls.getClassLoader();
+        }
+        return cl;
     }
 
 }
