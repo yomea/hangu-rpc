@@ -22,7 +22,7 @@
 
     <dependency>
       <groupId>org.hanggu</groupId>
-      <artifactId>hanggu-core</artifactId>
+      <artifactId>hanggu-rpc-starter</artifactId>
       <version>1.0-SNAPSHOT</version>
     </dependency>
 
