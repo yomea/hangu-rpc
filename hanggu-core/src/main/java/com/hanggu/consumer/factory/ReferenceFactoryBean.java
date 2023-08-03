@@ -1,10 +1,8 @@
 package com.hanggu.consumer.factory;
 
 import com.hanggu.common.util.CommonUtils;
-import com.hanggu.common.util.DescClassUtils;
 import com.hanggu.consumer.annotation.HangguReference;
 import com.hanggu.consumer.invocation.RpcReferenceHandler;
-import com.hanggu.consumer.manager.RegistryDirectory;
 import java.lang.reflect.Proxy;
 import org.springframework.beans.factory.FactoryBean;
 
@@ -35,7 +33,7 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T> {
         RpcReferenceHandler rpcReferenceHandler = new RpcReferenceHandler(groupName, interfaceName, version);
 
         // todo 实现类待写
-        return (T) Proxy.newProxyInstance(classLoader, new Class<?>[] {interfaceClass}, rpcReferenceHandler);
+        return (T) Proxy.newProxyInstance(classLoader, new Class<?>[]{interfaceClass}, rpcReferenceHandler);
     }
 
     @Override

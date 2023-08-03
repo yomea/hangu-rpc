@@ -1,16 +1,12 @@
 package com.hanggu.consumer.scaner;
 
 import com.hanggu.consumer.annotation.ReferenceScan;
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
@@ -58,7 +54,8 @@ public class ReferenceScannerRegistrar implements ImportBeanDefinitionRegistrar 
     }
 
     private static String generateBaseBeanName(AnnotationMetadata importingClassMetadata, int index) {
-        return importingClassMetadata.getClassName() + "#" + ReferenceScannerRegistrar.class.getSimpleName() + "#" + index;
+        return importingClassMetadata.getClassName() + "#" + ReferenceScannerRegistrar.class.getSimpleName() + "#"
+            + index;
     }
 
     private static String getDefaultBasePackage(AnnotationMetadata importingClassMetadata) {

@@ -63,20 +63,21 @@ public class NettyClient {
     }
 
     private void close() {
-        if(nioEventLoopGroup != null) {
+        if (nioEventLoopGroup != null) {
             nioEventLoopGroup.shutdownGracefully();
         }
     }
 
     /**
      * 连接
+     *
      * @param hostIp
      * @param port
      * @return
      */
     public Channel connect(String hostIp, int port) {
         Channel channel = this.bootstrap.connect(hostIp, port).addListener(future -> {
-            if(!future.isSuccess()) {
+            if (!future.isSuccess()) {
                 log.error("连接 {}:{} 失败！", hostIp, port);
             }
         }).channel();

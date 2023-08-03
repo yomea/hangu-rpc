@@ -7,6 +7,7 @@ import java.io.IOException;
  * @date 2023/7/31 17:15
  */
 public interface SerialInput {
+
     <T> T readObject(Class<T> tClass) throws IOException;
 
     int readInt() throws IOException;

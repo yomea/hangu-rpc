@@ -94,12 +94,12 @@ public class RequestMessageCodec extends MessageToMessageCodec<ByteBuf, Request>
         Long id = byteBuf.readLong();
         byte serialType = (byte) (HangguCons.SERIALIZATION_MARK & msgType);
         try {
-           if ((MsgTypeMarkEnum.HEART_FLAG.getMark() & msgType) == 1) {
+            if ((MsgTypeMarkEnum.HEART_FLAG.getMark() & msgType) == 1) {
 
                 PingPong pingPong = this.dealHeart(id);
                 list.add(pingPong);
                 // 响应
-            } else if(requstFlag == 0) {
+            } else if (requstFlag == 0) {
                 Response response = this.dealResponse(id, byteBuf, serialType);
                 list.add(response);
             }
@@ -109,17 +109,20 @@ public class RequestMessageCodec extends MessageToMessageCodec<ByteBuf, Request>
             throw e;
         } catch (IOException e) {
             RpcInvokerException cause = new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "反序列化失败！", e);
-            Response response = CommonUtils.createResponseInfo(id, serialType, cause.getCode(), cause.getClass(), cause);
+            Response response = CommonUtils.createResponseInfo(id, serialType, cause.getCode(), cause.getClass(),
+                cause);
             ctx.writeAndFlush(response);
             throw e;
         } catch (Exception e) {
-            Response response = CommonUtils.createResponseInfo(id, serialType, ErrorCodeEnum.FAILURE.getCode(), e.getClass(), e);
+            Response response = CommonUtils.createResponseInfo(id, serialType, ErrorCodeEnum.FAILURE.getCode(),
+                e.getClass(), e);
             ctx.writeAndFlush(response);
             throw e;
         }
     }
 
-    private Response dealResponse(Long id, ByteBuf byteBuf, byte serialType) throws IOException, ClassNotFoundException {
+    private Response dealResponse(Long id, ByteBuf byteBuf, byte serialType)
+        throws IOException, ClassNotFoundException {
 
         int bodyLength = byteBuf.readInt();
         byte[] body = new byte[bodyLength];

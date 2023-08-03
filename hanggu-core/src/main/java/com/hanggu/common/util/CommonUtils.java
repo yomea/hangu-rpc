@@ -1,13 +1,8 @@
 package com.hanggu.common.util;
 
-import com.hanggu.common.entity.Request;
 import com.hanggu.common.entity.Response;
 import com.hanggu.common.entity.RpcResponseTransport;
-
-import java.util.Arrays;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
 /**
  * @author wuzhenhong
@@ -31,11 +26,11 @@ public final class CommonUtils {
     }
 
     public static Response createResponseInfo(
-            Long id,
-            byte serializationType,
-            int code,
-            Class<?> clzz,
-            Object value) {
+        Long id,
+        byte serializationType,
+        int code,
+        Class<?> clzz,
+        Object value) {
 
         RpcResponseTransport rpcResponseTransport = new RpcResponseTransport();
         rpcResponseTransport.setCode(code);

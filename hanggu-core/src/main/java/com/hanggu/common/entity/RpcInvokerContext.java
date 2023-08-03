@@ -1,9 +1,8 @@
 package com.hanggu.common.entity;
 
 import io.netty.channel.ChannelHandlerContext;
-import lombok.Data;
-
 import java.util.List;
+import lombok.Data;
 
 /**
  * Created by wuzhenhong on 2023/8/1 23:14

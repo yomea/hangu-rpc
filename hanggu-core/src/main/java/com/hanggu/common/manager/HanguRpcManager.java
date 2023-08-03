@@ -1,7 +1,6 @@
 package com.hanggu.common.manager;
 
 import com.hanggu.consumer.client.NettyClient;
-import com.hanggu.consumer.properties.ConsumerProperties;
 import com.hanggu.provider.properties.ProviderProperties;
 import com.hanggu.provider.server.NettyServer;
 import java.util.Objects;
@@ -19,11 +18,11 @@ public class HanguRpcManager {
     private static volatile NettyServer NETTY_SERVER;
 
     public static final NettyServer openServer(ProviderProperties properties, Executor executor) {
-        if(Objects.nonNull(NETTY_SERVER)) {
+        if (Objects.nonNull(NETTY_SERVER)) {
             return NETTY_SERVER;
         }
         synchronized (SERVER_LOCK) {
-            if(Objects.nonNull(NETTY_SERVER)) {
+            if (Objects.nonNull(NETTY_SERVER)) {
                 return NETTY_SERVER;
             }
             NETTY_SERVER = new NettyServer();
@@ -34,11 +33,11 @@ public class HanguRpcManager {
     }
 
     public static final NettyClient openClient() {
-        if(Objects.nonNull(NETTY_CLIENT)) {
+        if (Objects.nonNull(NETTY_CLIENT)) {
             return NETTY_CLIENT;
         }
         synchronized (CLIENT_LOCK) {
-            if(Objects.nonNull(NETTY_CLIENT)) {
+            if (Objects.nonNull(NETTY_CLIENT)) {
                 return NETTY_CLIENT;
             }
             NETTY_CLIENT = new NettyClient();

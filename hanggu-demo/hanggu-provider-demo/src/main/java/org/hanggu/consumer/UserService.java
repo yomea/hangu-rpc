@@ -1,7 +1,6 @@
 package org.hanggu.consumer;
 
 import com.hanggu.consumer.annotation.HangguReference;
-import com.hanggu.provider.annotation.HangguService;
 
 /**
  * @author wuzhenhong

@@ -97,6 +97,6 @@ public final class DescClassUtils {
     }
 
     public static ClassLoader getClassLoader(Class<?> cls) {
-       return CommonUtils.getClassLoader(cls);
+        return CommonUtils.getClassLoader(cls);
     }
 }

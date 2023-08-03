@@ -19,16 +19,16 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.ByteArrayOutputStream;
-import java.util.List;
-
 /**
  * 响应编码与请求解码
+ *
  * @author wuzhenhong
  * @date 2023/8/2 9:44
  */
@@ -99,11 +99,13 @@ public class ResponseMessageCodec extends MessageToMessageCodec<ByteBuf, Respons
             throw e;
         } catch (IOException e) {
             RpcInvokerException cause = new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "反序列化失败！", e);
-            Response response = CommonUtils.createResponseInfo(id, serialType, cause.getCode(), cause.getClass(), cause);
+            Response response = CommonUtils.createResponseInfo(id, serialType, cause.getCode(), cause.getClass(),
+                cause);
             ctx.writeAndFlush(response);
             throw e;
         } catch (Exception e) {
-            Response response = CommonUtils.createResponseInfo(id, serialType, ErrorCodeEnum.FAILURE.getCode(), e.getClass(), e);
+            Response response = CommonUtils.createResponseInfo(id, serialType, ErrorCodeEnum.FAILURE.getCode(),
+                e.getClass(), e);
             ctx.writeAndFlush(response);
             throw e;
         }
@@ -132,7 +134,8 @@ public class ResponseMessageCodec extends MessageToMessageCodec<ByteBuf, Respons
                 parameterInfo.setValue(value);
                 return parameterInfo;
             } catch (ClassNotFoundException e) {
-                throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), String.format("调用方法参数类型描述=》%s，类不存在！", desc), e);
+                throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(),
+                    String.format("调用方法参数类型描述=》%s，类不存在！", desc), e);
             } catch (IOException e) {
                 throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "反序列化异常", e);
             }
@@ -147,7 +150,6 @@ public class ResponseMessageCodec extends MessageToMessageCodec<ByteBuf, Respons
         request.setId(id);
         request.setSerializationType(serialType);
         request.setInvokerTransport(rpcRequestTransport);
-
 
         return request;
     }

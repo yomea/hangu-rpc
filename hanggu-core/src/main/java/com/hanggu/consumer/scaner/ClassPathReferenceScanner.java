@@ -9,14 +9,11 @@ import org.springframework.aop.scope.ScopedProxyFactoryBean;
 import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.util.StringUtils;
 
 /**
  * @author wuzhenhong
@@ -68,7 +65,8 @@ public class ClassPathReferenceScanner extends ClassPathBeanDefinitionScanner {
                 definition = (AbstractBeanDefinition) Optional
                     .ofNullable(((RootBeanDefinition) definition).getDecoratedDefinition())
                     .map(BeanDefinitionHolder::getBeanDefinition).orElseThrow(() -> new IllegalStateException(
-                        "The target bean definition of scoped proxy bean not found. Root bean definition[" + holder + "]"));
+                        "The target bean definition of scoped proxy bean not found. Root bean definition[" + holder
+                            + "]"));
                 scopedProxy = true;
             }
             String beanClassName = definition.getBeanClassName();

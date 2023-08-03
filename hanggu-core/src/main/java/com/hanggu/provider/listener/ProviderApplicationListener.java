@@ -5,16 +5,18 @@ import com.hanggu.provider.annotation.HangguService;
 import com.hanggu.provider.invoker.RpcInvoker;
 import com.hanggu.provider.manager.LocalServiceManager;
 import com.hanggu.provider.properties.ProviderProperties;
-import com.hanggu.provider.server.NettyServer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.CollectionUtils;
-
-import java.util.*;
-import java.util.concurrent.Executor;
 
 /**
  * @author wuzhenhong
@@ -41,9 +43,9 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
             String groupName = hangguService.groupName();
             String interfaceName = hangguService.interfaceName();
             List<String> interfaceNameList = new ArrayList<>();
-            if(Objects.nonNull(interfaceName) && !interfaceName.trim().isEmpty()) {
+            if (Objects.nonNull(interfaceName) && !interfaceName.trim().isEmpty()) {
                 Class<?>[] interfaces = service.getClass().getInterfaces();
-                if(Objects.isNull(interfaces) || interfaces.length == 0) {
+                if (Objects.isNull(interfaces) || interfaces.length == 0) {
                     interfaceNameList.add(service.getClass().getName());
                 } else {
                     Arrays.stream(interfaces).forEach(i -> {
@@ -57,7 +59,7 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
             String prefixKey = groupName + "/" + version;
             RpcInvoker rpcInvoker = new RpcInvoker();
             rpcInvoker.setService(service);
-            interfaceNameList.stream().forEach(intName ->{
+            interfaceNameList.stream().forEach(intName -> {
                 String key = prefixKey + "/" + intName;
                 // export service
                 // step 1.0 本地暴露

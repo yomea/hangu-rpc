@@ -1,13 +1,10 @@
 package com.hanggu.common.serialization.impl;
 
 import com.caucho.hessian.io.Hessian2Input;
-import com.caucho.hessian.io.Hessian2Output;
 import com.caucho.hessian.io.SerializerFactory;
 import com.hanggu.common.serialization.SerialInput;
-import com.hanggu.common.serialization.SerialOutput;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 /**
  * @author wuzhenhong

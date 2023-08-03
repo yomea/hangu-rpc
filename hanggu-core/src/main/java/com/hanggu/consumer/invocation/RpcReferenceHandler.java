@@ -14,15 +14,12 @@ import com.hanggu.consumer.client.NettyClient;
 import com.hanggu.consumer.manager.RegistryDirectory;
 import com.hanggu.consumer.manager.RpcRequestFuture;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.DefaultPromise;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import javax.management.ServiceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
@@ -82,7 +79,7 @@ public class RpcReferenceHandler implements InvocationHandler {
         Class<?>[] parameterTypes = method.getParameterTypes();
         List<ParameterInfo> parameterInfos = new ArrayList<>();
         int i = 0;
-        for(Class<?> type : parameterTypes) {
+        for (Class<?> type : parameterTypes) {
             ParameterInfo parameterInfo = new ParameterInfo();
             parameterInfo.setType(type);
             parameterInfo.setValue(args[i++]);
@@ -96,7 +93,7 @@ public class RpcReferenceHandler implements InvocationHandler {
 
         channel.writeAndFlush(request).addListener(wFuture -> {
             // 消息发送成功之后，保存请求
-            if(wFuture.isSuccess()) {
+            if (wFuture.isSuccess()) {
                 RpcRequestFuture.putFuture(request.getId(), future);
             } else {
                 log.error("发送请求失败！");
@@ -105,11 +102,11 @@ public class RpcReferenceHandler implements InvocationHandler {
         });
 
         // TODO: 2023/8/2 后边有空加入异步调用，异步调用很简单，就是通过时间轮或者调度线程池，超时还没返回表示失败即可
-        if(!future.await(2000, TimeUnit.MILLISECONDS)) {
+        if (!future.await(2000, TimeUnit.MILLISECONDS)) {
             log.error("请求超时！");
             throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "请求超时！");
         }
-        
+
         return future.getNow();
     }
 }

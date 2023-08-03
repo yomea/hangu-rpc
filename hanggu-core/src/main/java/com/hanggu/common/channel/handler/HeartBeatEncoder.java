@@ -10,6 +10,7 @@ import io.netty.channel.ChannelPromise;
 
 /**
  * 心跳编码器
+ *
  * @author wuzhenhong
  * @date 2023/8/2 9:44
  */
@@ -17,7 +18,7 @@ public class HeartBeatEncoder extends ChannelDuplexHandler {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        if(!(msg instanceof PingPong)) {
+        if (!(msg instanceof PingPong)) {
             return;
         }
 

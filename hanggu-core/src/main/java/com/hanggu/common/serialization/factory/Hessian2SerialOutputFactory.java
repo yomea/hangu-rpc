@@ -1,7 +1,7 @@
 package com.hanggu.common.serialization.factory;
 
-import com.hanggu.common.serialization.SerialOutputFactory;
 import com.hanggu.common.serialization.SerialOutput;
+import com.hanggu.common.serialization.SerialOutputFactory;
 import com.hanggu.common.serialization.impl.Hessian2SerialOutput;
 import java.io.OutputStream;
 

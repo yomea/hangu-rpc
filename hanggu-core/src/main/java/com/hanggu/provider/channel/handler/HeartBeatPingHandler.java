@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * 处理来自客户端的心跳
+ *
  * @author wuzhenhong
  * @date 2023/7/31 17:56
  */
@@ -28,7 +29,7 @@ public class HeartBeatPingHandler extends SimpleChannelInboundHandler<PingPong> 
             IdleState idleState = stateEvent.state();
             // 该链接客户端很久没有向服务端发送信息或者心跳了，直接叫该链接关闭，回收资源
             // 提供者端不主动发送心跳，心跳完全由客户端主动发起
-            if(IdleState.ALL_IDLE == idleState) {
+            if (IdleState.ALL_IDLE == idleState) {
                 // 关闭连接
                 ctx.channel().close();
             }

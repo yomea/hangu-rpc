@@ -5,6 +5,7 @@ import lombok.Data;
 
 /**
  * 请求响应
+ *
  * @author wuzhenhong
  * @date 2023/8/1 11:00
  */
