@@ -9,6 +9,8 @@ import com.hanggu.consumer.channel.handler.ResponseMessageHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -35,6 +37,8 @@ public class NettyClient {
         try {
             bootstrap = new Bootstrap();
             nioEventLoopGroup = new NioEventLoopGroup(HangguCons.DEF_IO_THREADS << 3);
+//            @Sharable
+            LoggingHandler loggingHandler = new LoggingHandler(LogLevel.INFO);
             bootstrap.group(nioEventLoopGroup)
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.TCP_NODELAY, true)
@@ -46,12 +50,13 @@ public class NettyClient {
                     @Override
                     protected void initChannel(Channel ch) throws Exception {
                         ch.pipeline()
-                            .addLast("logging", new LoggingHandler(LogLevel.INFO))
+                            .addLast("logging", loggingHandler)
                             .addLast(new ByteFrameDecoder())
                             .addLast(new RequestMessageCodec()) // 请求与响应编解码器
                             .addLast(new HeartBeatEncoder()) // 心跳编码器
                             // 写超时定义为2s，HeartBeatPongHandler 将会接收到写超时事件，此时主动向服务器发送心跳
-                            .addLast(new IdleStateHandler(4, 2, 0, TimeUnit.SECONDS))
+                            // 每隔 2s 发送一次心跳
+                            .addLast(new IdleStateHandler(6, 2, 0, TimeUnit.SECONDS))
                             .addLast(new HeartBeatPongHandler(NettyClient.this)) // 心跳编码器
                             .addLast(new ResponseMessageHandler());
                     }
@@ -85,7 +90,7 @@ public class NettyClient {
         return channel;
     }
 
-    public void reconnect(SocketAddress remoteAddress) {
-        this.bootstrap.connect(remoteAddress);
+    public ChannelFuture reconnect(SocketAddress remoteAddress) {
+        return this.bootstrap.connect(remoteAddress);
     }
 }

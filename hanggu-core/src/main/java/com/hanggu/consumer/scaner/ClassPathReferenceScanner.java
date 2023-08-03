@@ -1,5 +1,6 @@
 package com.hanggu.consumer.scaner;
 
+import com.hanggu.common.util.CommonUtils;
 import com.hanggu.consumer.annotation.HangguReference;
 import java.util.Arrays;
 import java.util.Optional;
@@ -13,7 +14,9 @@ import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.util.ClassUtils;
 
 /**
  * @author wuzhenhong
@@ -70,7 +73,18 @@ public class ClassPathReferenceScanner extends ClassPathBeanDefinitionScanner {
                 scopedProxy = true;
             }
             String beanClassName = definition.getBeanClassName();
+            Class<?> clazz;
+            try {
+                clazz = ClassUtils.forName(beanClassName, CommonUtils.getClassLoader(ClassPathReferenceScanner.class));
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+            // 该扫描器只扫描被 HangguReference 注解标注的服务引用接口
+            HangguReference hangguReference = AnnotationUtils.getAnnotation(clazz, HangguReference.class);
             // 添加构造参数
+            definition.getConstructorArgumentValues().addGenericArgumentValue(hangguReference.groupName());
+            definition.getConstructorArgumentValues().addGenericArgumentValue(hangguReference.interfaceName());
+            definition.getConstructorArgumentValues().addGenericArgumentValue(hangguReference.version());
             definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName);
             // 将该 bean 定义为工厂bean
             definition.setBeanClass(this.factoryBean);

@@ -8,6 +8,11 @@ import lombok.Data;
 @Data
 public class RpcResult {
 
+    /**
+     * @see com.hanggu.common.enums.ErrorCodeEnum
+     */
+    private int code;
+
     private Class<?> returnType;
 
     private Object result;

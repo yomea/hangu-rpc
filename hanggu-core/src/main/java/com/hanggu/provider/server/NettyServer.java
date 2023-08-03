@@ -42,6 +42,7 @@ public class NettyServer {
         boss = new NioEventLoopGroup();
         worker = new NioEventLoopGroup(HangguCons.DEF_IO_THREADS);
         try {
+            LoggingHandler loggingHandler = new LoggingHandler(LogLevel.INFO);
             serverBootstrap = new ServerBootstrap();
             serverBootstrap.channel(NioServerSocketChannel.class)
                 .group(boss, worker)
@@ -51,14 +52,14 @@ public class NettyServer {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
-                        ch.pipeline().addLast("logging", new LoggingHandler(LogLevel.INFO))
+                        ch.pipeline().addLast("logging",loggingHandler)
                             // 继承 LengthFieldBasedFrameDecoder 用于拆包
                             .addLast(new ByteFrameDecoder())
                             // 用于编解码
                             .addLast(new ResponseMessageCodec())
                             // 用于心跳编码
                             .addLast(new HeartBeatEncoder())
-                            // 读写时间超过4s，表示该链接已失效
+                            // 读写时间超过8s，表示该链接已失效
                             .addLast(new IdleStateHandler(0, 0, 8, TimeUnit.SECONDS))
                             // 心跳处理器
                             .addLast(new HeartBeatPingHandler())

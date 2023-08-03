@@ -5,6 +5,7 @@ import com.hanggu.consumer.annotation.HangguReference;
 import com.hanggu.consumer.invocation.RpcReferenceHandler;
 import java.lang.reflect.Proxy;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.util.StringUtils;
 
 /**
  * @author wuzhenhong
@@ -19,20 +20,22 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T> {
     private String interfaceName;
     private Class<T> interfaceClass;
 
-    public ReferenceFactoryBean(Class<T> interfaceClass) {
+    public ReferenceFactoryBean(String groupName, String interfaceName, String version, Class<T> interfaceClass) {
+        this.groupName = groupName;
+        if(!StringUtils.hasText(interfaceName)) {
+            interfaceName = interfaceClass.getName();
+        }
+        this.interfaceName = interfaceName;
+        this.version = version;
         this.interfaceClass = interfaceClass;
     }
 
     @Override
     public T getObject() throws Exception {
         ClassLoader classLoader = CommonUtils.getClassLoader(ReferenceFactoryBean.class);
-        HangguReference hangguReference = interfaceClass.getAnnotation(HangguReference.class);
-        String groupName = hangguReference.groupName();
-        String interfaceName = hangguReference.interfaceName();
-        String version = hangguReference.version();
-        RpcReferenceHandler rpcReferenceHandler = new RpcReferenceHandler(groupName, interfaceName, version);
+        RpcReferenceHandler rpcReferenceHandler =
+            new RpcReferenceHandler(this.groupName, this.interfaceName, this.version);
 
-        // todo 实现类待写
         return (T) Proxy.newProxyInstance(classLoader, new Class<?>[]{interfaceClass}, rpcReferenceHandler);
     }
 

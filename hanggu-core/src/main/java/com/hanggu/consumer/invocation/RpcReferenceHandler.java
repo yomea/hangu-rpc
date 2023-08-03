@@ -5,6 +5,7 @@ import com.hanggu.common.entity.HostInfo;
 import com.hanggu.common.entity.ParameterInfo;
 import com.hanggu.common.entity.Request;
 import com.hanggu.common.entity.RpcRequestTransport;
+import com.hanggu.common.entity.RpcResult;
 import com.hanggu.common.enums.ErrorCodeEnum;
 import com.hanggu.common.enums.SerializationTypeEnum;
 import com.hanggu.common.exception.RpcInvokerException;
@@ -89,7 +90,7 @@ public class RpcReferenceHandler implements InvocationHandler {
 
         request.setInvokerTransport(invokerTransport);
 
-        DefaultPromise<Object> future = new DefaultPromise<>(channel.eventLoop());
+        DefaultPromise<RpcResult> future = new DefaultPromise<>(channel.eventLoop());
 
         channel.writeAndFlush(request).addListener(wFuture -> {
             // 消息发送成功之后，保存请求
@@ -107,6 +108,16 @@ public class RpcReferenceHandler implements InvocationHandler {
             throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "请求超时！");
         }
 
-        return future.getNow();
+        RpcResult rpcResult = future.getNow();
+        if(!ErrorCodeEnum.SUCCESS.getCode().equals(rpcResult.getCode())) {
+            Class<?> returnType = rpcResult.getReturnType();
+            if(Throwable.class.isAssignableFrom(returnType)) {
+                Throwable e = (Throwable) rpcResult.getResult();
+                throw e;
+            } else {
+                throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "rpc调用发生了未知错误！");
+            }
+        }
+        return rpcResult.getResult();
     }
 }

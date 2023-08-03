@@ -90,7 +90,7 @@ public class ResponseMessageCodec extends MessageToMessageCodec<ByteBuf, Respons
                 // 心跳
             } else if ((MsgTypeMarkEnum.HEART_FLAG.getMark() & msgType) == 1) {
 
-                PingPong pingPong = this.dealHeart(id);
+                PingPong pingPong = this.dealHeart(id, serialType);
                 list.add(pingPong);
             }
         } catch (RpcInvokerException e) {
@@ -154,15 +154,16 @@ public class ResponseMessageCodec extends MessageToMessageCodec<ByteBuf, Respons
         return request;
     }
 
-    private PingPong dealHeart(Long id) {
+    private PingPong dealHeart(Long id, byte serialType) {
         PingPong pingPong = new PingPong();
         pingPong.setId(id);
+        pingPong.setSerializationType(serialType);
         return pingPong;
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        log.error("响应编码失败！");
+        log.error("响应编码失败！", cause);
         super.exceptionCaught(ctx, cause);
     }
 }
