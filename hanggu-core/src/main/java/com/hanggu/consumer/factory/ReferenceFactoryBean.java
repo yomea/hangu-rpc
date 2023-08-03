@@ -1,17 +1,38 @@
 package com.hanggu.consumer.factory;
 
+import com.hanggu.common.entity.MethodInfo;
+import com.hanggu.common.entity.ParameterInfo;
+import com.hanggu.common.enums.ErrorCodeEnum;
+import com.hanggu.common.enums.MethodCallTypeEnum;
+import com.hanggu.common.exception.RpcParseException;
 import com.hanggu.common.util.CommonUtils;
-import com.hanggu.consumer.annotation.HangguReference;
+import com.hanggu.consumer.annotation.HanguMethod;
+import com.hanggu.consumer.callback.RpcResponseCallback;
 import com.hanggu.consumer.invocation.RpcReferenceHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.MethodIntrospector;
+import org.springframework.core.MethodIntrospector.MetadataLookup;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
  * @author wuzhenhong
  * @date 2023/8/2 9:13
  */
-public class ReferenceFactoryBean<T> implements FactoryBean<T> {
+public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean {
 
     private String groupName;
 
@@ -20,9 +41,14 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T> {
     private String interfaceName;
     private Class<T> interfaceClass;
 
+    private Map<Method, MethodInfo> methodInfoCache;
+
+    @Autowired
+    private Executor rpcInvokerExecutor;
+
     public ReferenceFactoryBean(String groupName, String interfaceName, String version, Class<T> interfaceClass) {
         this.groupName = groupName;
-        if(!StringUtils.hasText(interfaceName)) {
+        if (!StringUtils.hasText(interfaceName)) {
             interfaceName = interfaceClass.getName();
         }
         this.interfaceName = interfaceName;
@@ -34,7 +60,7 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T> {
     public T getObject() throws Exception {
         ClassLoader classLoader = CommonUtils.getClassLoader(ReferenceFactoryBean.class);
         RpcReferenceHandler rpcReferenceHandler =
-            new RpcReferenceHandler(this.groupName, this.interfaceName, this.version);
+            new RpcReferenceHandler(this.groupName, this.interfaceName, this.version, this.rpcInvokerExecutor, this.methodInfoCache);
 
         return (T) Proxy.newProxyInstance(classLoader, new Class<?>[]{interfaceClass}, rpcReferenceHandler);
     }
@@ -44,27 +70,74 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T> {
         return interfaceClass;
     }
 
-    public String getGroupName() {
-        return groupName;
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        methodInfoCache = MethodIntrospector.selectMethods(interfaceClass,
+            (MetadataLookup<MethodInfo>) method -> {
+
+                MethodInfo info = new MethodInfo();
+                info.setName(method.getName());
+                info.setCallType(MethodCallTypeEnum.SYNC.getType());
+                info.setTimeout(5);
+                info.setCallback(null);
+
+                Class<?>[] parameterTypes = method.getParameterTypes();
+                List<ParameterInfo> callbackParameterInfoList = new ArrayList<>();
+                List<ParameterInfo> factParameterInfoList = new ArrayList<>();
+                for (int index = 0; index < parameterTypes.length; index++) {
+                    Class<?> parameterType = parameterTypes[index];
+                    ParameterInfo parameterInfo = new ParameterInfo();
+                    parameterInfo.setIndex(index);
+                    parameterInfo.setType(parameterType);
+                    if (RpcResponseCallback.class.isAssignableFrom(parameterType)) {
+                        info.setCallType(MethodCallTypeEnum.ASYNC_PARAMETER.getType());
+                        callbackParameterInfoList.add(parameterInfo);
+                    } else {
+                        factParameterInfoList.add(parameterInfo);
+                    }
+                }
+                info.setFactParameterInfoList(factParameterInfoList);
+                info.setCallbackParameterInfoList(callbackParameterInfoList);
+                // 注解优先级更高
+                HanguMethod hanguMethod = AnnotationUtils.getAnnotation(method, HanguMethod.class);
+                if (Objects.nonNull(hanguMethod)) {
+                    int timeout = hanguMethod.timeout();
+                    if (timeout <= 0) {
+                        throw new RpcParseException(ErrorCodeEnum.FAILURE.getCode(),
+                            this.msgPrefix(method) + "超时时间必须是大于零数字！");
+                    }
+
+                    Class<RpcResponseCallback> callbackClass = hanguMethod.callback();
+                    if (!ClassUtils.hasConstructor(callbackClass)) {
+                        throw new RpcParseException(ErrorCodeEnum.FAILURE.getCode(),
+                            this.msgPrefix(method) + "回调函数没有默认构造器！");
+                    }
+                    try {
+                        RpcResponseCallback callback = ClassUtils.getConstructorIfAvailable(callbackClass)
+                            .newInstance();
+                        info.setCallType(MethodCallTypeEnum.ASYNC_SPECIFY.getType());
+                        info.setTimeout(hanguMethod.timeout());
+                        info.setCallback(callback);
+                    } catch (InstantiationException e) {
+                        throw new RuntimeException(e);
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    } catch (InvocationTargetException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                return info;
+            });
+
+        System.out.println();
     }
 
-    public void setGroupName(String groupName) {
-        this.groupName = groupName;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public String getInterfaceName() {
-        return interfaceName;
-    }
-
-    public void setInterfaceName(String interfaceName) {
-        this.interfaceName = interfaceName;
+    private String msgPrefix(Method method) {
+        return String.format(
+            "group: %s, interfaceName: %s, version: %s, interfaceClass: %s，methodName：%s, "
+                + "parameterTypes: %s",
+            this.groupName, this.interfaceName, this.version, this.interfaceClass.getName(),
+            method.getName(), Arrays.stream(method.getParameterTypes()).map(Class::getName).collect(
+                Collectors.joining(",")));
     }
 }

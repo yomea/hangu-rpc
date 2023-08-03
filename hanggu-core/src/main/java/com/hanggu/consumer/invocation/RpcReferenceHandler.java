@@ -2,25 +2,33 @@ package com.hanggu.consumer.invocation;
 
 import cn.hutool.core.util.RandomUtil;
 import com.hanggu.common.entity.HostInfo;
+import com.hanggu.common.entity.MethodInfo;
 import com.hanggu.common.entity.ParameterInfo;
 import com.hanggu.common.entity.Request;
+import com.hanggu.common.entity.RpcRequestPromise;
 import com.hanggu.common.entity.RpcRequestTransport;
 import com.hanggu.common.entity.RpcResult;
 import com.hanggu.common.enums.ErrorCodeEnum;
+import com.hanggu.common.enums.MethodCallTypeEnum;
 import com.hanggu.common.enums.SerializationTypeEnum;
 import com.hanggu.common.exception.RpcInvokerException;
 import com.hanggu.common.manager.HanguRpcManager;
 import com.hanggu.common.util.CommonUtils;
+import com.hanggu.consumer.callback.RpcResponseCallback;
 import com.hanggu.consumer.client.NettyClient;
 import com.hanggu.consumer.manager.RegistryDirectory;
-import com.hanggu.consumer.manager.RpcRequestFuture;
+import com.hanggu.consumer.manager.RpcRequestManager;
 import io.netty.channel.Channel;
 import io.netty.util.concurrent.DefaultPromise;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.management.ServiceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
@@ -40,10 +48,19 @@ public class RpcReferenceHandler implements InvocationHandler {
 
     private RegistryDirectory registryDirectory;
 
-    public RpcReferenceHandler(String groupName, String interfaceName, String version) {
+    private Map<Method, MethodInfo> methodInfoCache;
+
+    private Executor executor;
+
+    public RpcReferenceHandler(String groupName, String interfaceName, String version,
+        Executor executor,
+        Map<Method, MethodInfo> methodInfoCache) {
         this.groupName = groupName;
         this.interfaceName = interfaceName;
         this.version = version;
+        this.executor = executor;
+        this.methodInfoCache = methodInfoCache;
+
         this.registryDirectory = new RegistryDirectory();
         // TODO: 2023/8/2 注册订阅 group 的服务拉取监听器
     }
@@ -62,9 +79,11 @@ public class RpcReferenceHandler implements InvocationHandler {
         int index = RandomUtil.getRandom().nextInt(0, hostInfoList.size());
         HostInfo hostInfo = hostInfoList.get(index);
         // 启动客户端
-        NettyClient nettyClient = HanguRpcManager.openClient();
+        NettyClient nettyClient = HanguRpcManager.openClient(this.executor);
         // 连接
         Channel channel = nettyClient.connect(hostInfo.getHost(), hostInfo.getPort());
+
+        MethodInfo methodInfo = methodInfoCache.get(method);
 
         Request request = new Request();
         request.setId(CommonUtils.incrementId());
@@ -75,43 +94,56 @@ public class RpcReferenceHandler implements InvocationHandler {
         invokerTransport.setGroupName(this.groupName);
         invokerTransport.setInterfaceName(this.interfaceName);
         invokerTransport.setVersion(this.version);
-        invokerTransport.setMethodName(method.getName());
+        invokerTransport.setMethodName(methodInfo.getName());
 
-        Class<?>[] parameterTypes = method.getParameterTypes();
-        List<ParameterInfo> parameterInfos = new ArrayList<>();
-        int i = 0;
-        for (Class<?> type : parameterTypes) {
-            ParameterInfo parameterInfo = new ParameterInfo();
-            parameterInfo.setType(type);
-            parameterInfo.setValue(args[i++]);
+        List<ParameterInfo> factParameterInfoList = Optional.ofNullable(methodInfo.getFactParameterInfoList())
+            .orElse(Collections.emptyList())
+            .stream().map(type -> {
+                ParameterInfo parameterInfo = new ParameterInfo();
+                parameterInfo.setType(type.getType());
+                parameterInfo.setIndex(type.getIndex());
+                parameterInfo.setValue(args[type.getIndex()]);
+                return parameterInfo;
+            }).collect(Collectors.toList());
+        for (ParameterInfo parameterInfo : factParameterInfoList) {
+            parameterInfo.setValue(args[parameterInfo.getIndex()]);
         }
 
-        invokerTransport.setParameterInfos(parameterInfos);
-
+        invokerTransport.setParameterInfos(factParameterInfoList);
         request.setInvokerTransport(invokerTransport);
-
-        DefaultPromise<RpcResult> future = new DefaultPromise<>(channel.eventLoop());
+        Integer callType = methodInfo.getCallType();
+        List<RpcResponseCallback> callbacks = Collections.emptyList();
+        if (MethodCallTypeEnum.ASYNC_PARAMETER.getType().equals(callType)) {
+            callbacks = Optional.ofNullable(methodInfo.getCallbackParameterInfoList()).orElse(Collections.emptyList())
+                .stream().map(parameterInfo -> (RpcResponseCallback) args[parameterInfo.getIndex()]).collect(Collectors.toList());
+        } else if(MethodCallTypeEnum.ASYNC_SPECIFY.getType().equals(callType)) {
+            callbacks = Collections.singletonList(methodInfo.getCallback());
+        }
+        RpcRequestPromise<RpcResult> future = new RpcRequestPromise<>(callbacks, channel.eventLoop());
 
         channel.writeAndFlush(request).addListener(wFuture -> {
             // 消息发送成功之后，保存请求
             if (wFuture.isSuccess()) {
-                RpcRequestFuture.putFuture(request.getId(), future);
+                RpcRequestManager.putFuture(request.getId(), future);
             } else {
                 log.error("发送请求失败！");
                 throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "发送请求异常！");
             }
         });
 
-        // TODO: 2023/8/2 后边有空加入异步调用，异步调用很简单，就是通过时间轮或者调度线程池，超时还没返回表示失败即可
-        if (!future.await(2000, TimeUnit.MILLISECONDS)) {
+        if(!MethodCallTypeEnum.SYNC.getType().equals(callType)) {
+            return null;
+        }
+
+        if (!future.await(methodInfo.getTimeout(), TimeUnit.SECONDS)) {
             log.error("请求超时！");
             throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "请求超时！");
         }
 
         RpcResult rpcResult = future.getNow();
-        if(!ErrorCodeEnum.SUCCESS.getCode().equals(rpcResult.getCode())) {
+        if (!ErrorCodeEnum.SUCCESS.getCode().equals(rpcResult.getCode())) {
             Class<?> returnType = rpcResult.getReturnType();
-            if(Throwable.class.isAssignableFrom(returnType)) {
+            if (Throwable.class.isAssignableFrom(returnType)) {
                 Throwable e = (Throwable) rpcResult.getResult();
                 throw e;
             } else {
@@ -120,4 +152,5 @@ public class RpcReferenceHandler implements InvocationHandler {
         }
         return rpcResult.getResult();
     }
+
 }

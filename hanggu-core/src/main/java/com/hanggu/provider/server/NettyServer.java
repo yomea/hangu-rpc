@@ -3,6 +3,7 @@ package com.hanggu.provider.server;
 import com.hanggu.common.channel.handler.ByteFrameDecoder;
 import com.hanggu.common.channel.handler.HeartBeatEncoder;
 import com.hanggu.common.constant.HangguCons;
+import com.hanggu.common.properties.HanguProperties;
 import com.hanggu.provider.channel.handler.HeartBeatPingHandler;
 import com.hanggu.provider.channel.handler.RequestMessageHandler;
 import com.hanggu.provider.channel.handler.ResponseMessageCodec;

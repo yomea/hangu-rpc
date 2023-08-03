@@ -1,6 +1,7 @@
 package org.hanggu.consumer;
 
 import com.hanggu.consumer.annotation.HangguReference;
+import com.hanggu.consumer.callback.RpcResponseCallback;
 
 /**
  * @author wuzhenhong
@@ -8,5 +9,7 @@ import com.hanggu.consumer.annotation.HangguReference;
  */
 @HangguReference
 public interface UserService {
+
+    String getName(RpcResponseCallback callback);
 
 }

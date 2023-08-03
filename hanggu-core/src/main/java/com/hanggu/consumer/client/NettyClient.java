@@ -19,6 +19,7 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import java.net.SocketAddress;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,7 +34,7 @@ public class NettyClient {
 
     private NioEventLoopGroup nioEventLoopGroup;
 
-    public void start() {
+    public void start(Executor executor) {
         try {
             bootstrap = new Bootstrap();
             nioEventLoopGroup = new NioEventLoopGroup(HangguCons.DEF_IO_THREADS << 3);
@@ -58,7 +59,7 @@ public class NettyClient {
                             // 每隔 2s 发送一次心跳
                             .addLast(new IdleStateHandler(6, 2, 0, TimeUnit.SECONDS))
                             .addLast(new HeartBeatPongHandler(NettyClient.this)) // 心跳编码器
-                            .addLast(new ResponseMessageHandler());
+                            .addLast(new ResponseMessageHandler(executor));
                     }
                 });
         } catch (Exception e) {

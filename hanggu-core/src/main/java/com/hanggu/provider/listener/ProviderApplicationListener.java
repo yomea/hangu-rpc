@@ -1,6 +1,7 @@
 package com.hanggu.provider.listener;
 
 import com.hanggu.common.manager.HanguRpcManager;
+import com.hanggu.common.properties.HanguProperties;
 import com.hanggu.provider.annotation.HangguService;
 import com.hanggu.provider.invoker.RpcInvoker;
 import com.hanggu.provider.manager.LocalServiceManager;
@@ -28,7 +29,7 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
     private Executor rpcInvokerExecutor;
 
     @Autowired
-    private ProviderProperties providerProperties;
+    private HanguProperties hanguProperties;
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
@@ -69,6 +70,6 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
             });
         });
 
-        HanguRpcManager.openServer(providerProperties, rpcInvokerExecutor);
+        HanguRpcManager.openServer(hanguProperties, rpcInvokerExecutor);
     }
 }

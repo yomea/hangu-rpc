@@ -1,17 +1,19 @@
 package com.hanggu.consumer.channel.handler;
 
 import com.hanggu.common.entity.Response;
+import com.hanggu.common.entity.RpcRequestPromise;
 import com.hanggu.common.entity.RpcResponseTransport;
 import com.hanggu.common.entity.RpcResult;
-import com.hanggu.common.enums.ErrorCodeEnum;
-import com.hanggu.common.exception.RpcInvokerException;
-import com.hanggu.consumer.manager.RpcRequestFuture;
+import com.hanggu.consumer.callback.RpcResponseCallback;
+import com.hanggu.consumer.manager.RpcRequestManager;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.concurrent.DefaultPromise;
+import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Future;
+import java.util.concurrent.Executor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
 /**
  * 处理提供者的返回响应
@@ -22,12 +24,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ResponseMessageHandler extends SimpleChannelInboundHandler<Response> {
 
+    private Executor executor;
+
+    public ResponseMessageHandler(Executor executor) {
+        this.executor = executor;
+    }
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Response response) throws Exception {
 
         Long id = response.getId();
-        DefaultPromise<RpcResult> future = RpcRequestFuture.getFuture(id);
-        if(Objects.isNull(future)) {
+        RpcRequestPromise<RpcResult> future = RpcRequestManager.getFuture(id);
+        if(Objects.isNull(future) || future.isCancelled()) {
             log.warn("无效的响应请求！id = {}", id);
             return;
         }
@@ -37,7 +45,17 @@ public class ResponseMessageHandler extends SimpleChannelInboundHandler<Response
         rpcResult.setCode(rpcResponseTransport.getCode());
         rpcResult.setReturnType(rpcResponseTransport.getType());
         rpcResult.setResult(rpcResponseTransport.getVale());
-        future.setSuccess(rpcResult);
+
+        List<RpcResponseCallback> callbacks =  future.getCallbacks();
+        if(CollectionUtils.isEmpty(callbacks)) {
+            future.setSuccess(rpcResult);
+        } else {
+            executor.execute(() -> {
+                callbacks.stream().forEach(callback -> {
+                    callback.callback(rpcResult);
+                });
+            });
+        }
     }
 
     @Override

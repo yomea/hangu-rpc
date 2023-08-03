@@ -1,3 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  com.hanggu.provider.configuration.ProviderAutoConfiguration,\
-  com.hanggu.consumer.configuration.ConsumerAutoConfiguration
+  com.hanggu.common.configuration.HanguAutoConfiguration

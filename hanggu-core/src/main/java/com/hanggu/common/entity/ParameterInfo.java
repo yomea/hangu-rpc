@@ -11,6 +11,11 @@ import lombok.Data;
 public class ParameterInfo implements Serializable {
 
     /**
+     * 参数下标
+     */
+    private int index;
+
+    /**
      * 参数类型
      */
     private Class<?> type;
