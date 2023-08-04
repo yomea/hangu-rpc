@@ -27,7 +27,7 @@ public class HanguRpcManager {
     private static volatile NettyClient NETTY_CLIENT;
     private static volatile NettyServer NETTY_SERVER;
 
-    public static volatile Executor GLOBAL_EXECUTOR;
+    private static volatile Executor GLOBAL_EXECUTOR;
 
     public static final NettyServer openServer(HanguProperties properties) {
         if (Objects.nonNull(NETTY_SERVER)) {
