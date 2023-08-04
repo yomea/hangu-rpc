@@ -1,6 +1,9 @@
-package com.hanggu.provider.registry;
+package com.hanggu.common.registry;
 
+import com.hanggu.common.entity.HostInfo;
 import com.hanggu.common.entity.RegistryInfo;
+import com.hanggu.common.entity.ServerInfo;
+import java.util.List;
 
 /**
  * @author wuzhenhong
@@ -15,5 +18,7 @@ public interface RegistryService {
     void subscribe(RegistryInfo registryInfo);
 
     void unSubscribe(RegistryInfo registryInfo);
+
+    List<HostInfo> pullServers(ServerInfo serverInfo);
 
 }

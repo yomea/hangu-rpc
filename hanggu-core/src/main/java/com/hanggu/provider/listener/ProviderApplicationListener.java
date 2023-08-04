@@ -6,7 +6,7 @@ import com.hanggu.common.properties.HanguProperties;
 import com.hanggu.provider.annotation.HangguService;
 import com.hanggu.provider.invoker.RpcInvoker;
 import com.hanggu.provider.manager.LocalServiceManager;
-import com.hanggu.provider.registry.RegistryService;
+import com.hanggu.common.registry.RegistryService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -66,6 +66,7 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
                 // step 1.0 本地暴露
                 LocalServiceManager.register(key, rpcInvoker);
 
+                // step 2.0 远程暴露
                 RegistryInfo registryInfo = new RegistryInfo();
                 registryInfo.setGroupName(groupName);
                 registryInfo.setInterfaceName(interfaceName);

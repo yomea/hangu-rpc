@@ -7,13 +7,7 @@ import lombok.Data;
  * @date 2023/8/4 14:44
  */
 @Data
-public class RegistryInfo {
-
-    private String groupName;
-
-    private String interfaceName;
-
-    private String version;
+public class RegistryInfo extends ServerInfo {
 
     private HostInfo hostInfo;
 }

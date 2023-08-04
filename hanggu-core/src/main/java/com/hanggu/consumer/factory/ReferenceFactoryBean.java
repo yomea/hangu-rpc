@@ -3,6 +3,7 @@ package com.hanggu.consumer.factory;
 import com.hanggu.common.entity.HostInfo;
 import com.hanggu.common.entity.MethodInfo;
 import com.hanggu.common.entity.ParameterInfo;
+import com.hanggu.common.entity.ServerInfo;
 import com.hanggu.common.enums.ErrorCodeEnum;
 import com.hanggu.common.enums.MethodCallTypeEnum;
 import com.hanggu.common.exception.RpcParseException;
@@ -11,7 +12,7 @@ import com.hanggu.consumer.annotation.HanguMethod;
 import com.hanggu.consumer.callback.RpcResponseCallback;
 import com.hanggu.consumer.invocation.RpcReferenceHandler;
 import com.hanggu.consumer.manager.ConnectManager;
-import com.hanggu.provider.registry.impl.RedisRegistryService;
+import com.hanggu.common.registry.impl.RedisRegistryService;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -82,8 +83,11 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
     }
 
     private void initLocalServiceDirectory() {
-        // TODO: 2023/8/4 远程拉取服务
-        List<HostInfo> infos = Collections.emptyList();
+        ServerInfo serverInfo = new ServerInfo();
+        serverInfo.setGroupName(this.groupName);
+        serverInfo.setInterfaceName(this.interfaceName);
+        serverInfo.setVersion(this.version);
+        List<HostInfo> infos = registryService.pullServers(serverInfo);
         String key = CommonUtils.createServiceKey(this.groupName, this.interfaceName, this.version);
         ConnectManager.cacheConnects(key, infos);
     }

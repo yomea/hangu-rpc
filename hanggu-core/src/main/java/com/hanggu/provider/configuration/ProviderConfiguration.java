@@ -2,8 +2,8 @@ package com.hanggu.provider.configuration;
 
 import com.hanggu.provider.listener.ProviderApplicationListener;
 import com.hanggu.provider.properties.JedisConfigPropertis;
-import com.hanggu.provider.registry.RegistryService;
-import com.hanggu.provider.registry.impl.RedisRegistryService;
+import com.hanggu.common.registry.RegistryService;
+import com.hanggu.common.registry.impl.RedisRegistryService;
 import java.util.Collections;
 import java.util.HashSet;
 import org.springframework.beans.factory.annotation.Autowired;
