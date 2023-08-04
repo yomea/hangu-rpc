@@ -1,0 +1,10 @@
+hangu:
+  rpc:
+    provider:
+      port: 8089
+    registry:
+      protocol: redis
+      redis:
+        nodes: xxx
+        master: xxx
+        password: xxxx

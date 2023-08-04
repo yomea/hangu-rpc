@@ -8,6 +8,6 @@ import lombok.Data;
 @Data
 public class ProviderProperties {
 
-    private int port;
+    private int port = 8089;
 
 }

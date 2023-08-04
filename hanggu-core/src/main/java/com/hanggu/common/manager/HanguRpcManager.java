@@ -1,6 +1,8 @@
 package com.hanggu.common.manager;
 
+import cn.hutool.core.net.NetUtil;
 import com.hanggu.common.constant.HangguCons;
+import com.hanggu.common.entity.HostInfo;
 import com.hanggu.common.enums.ErrorCodeEnum;
 import com.hanggu.common.exception.RpcInvokerException;
 import com.hanggu.common.properties.HanguProperties;
@@ -29,6 +31,8 @@ public class HanguRpcManager {
 
     private static volatile Executor GLOBAL_EXECUTOR;
 
+    private static HostInfo LOCAL_HOST;
+
     public static final NettyServer openServer(HanguProperties properties) {
         if (Objects.nonNull(NETTY_SERVER)) {
             return NETTY_SERVER;
@@ -40,6 +44,10 @@ public class HanguRpcManager {
             }
             NETTY_SERVER = new NettyServer();
             NETTY_SERVER.start(properties.getProvider(), executor);
+            HostInfo hostInfo = new HostInfo();
+            hostInfo.setHost(NetUtil.getLocalhost().getHostAddress());
+            hostInfo.setPort(properties.getProvider().getPort());
+            LOCAL_HOST = hostInfo;
         }
 
         return NETTY_SERVER;
@@ -92,5 +100,9 @@ public class HanguRpcManager {
 
     public static final Executor getGlobalExecutor() {
         return GLOBAL_EXECUTOR;
+    }
+
+    public static final HostInfo getLocalHost() {
+        return LOCAL_HOST;
     }
 }

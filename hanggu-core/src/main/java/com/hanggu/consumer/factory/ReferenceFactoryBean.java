@@ -1,26 +1,30 @@
 package com.hanggu.consumer.factory;
 
+import com.hanggu.common.entity.HostInfo;
 import com.hanggu.common.entity.MethodInfo;
 import com.hanggu.common.entity.ParameterInfo;
 import com.hanggu.common.enums.ErrorCodeEnum;
 import com.hanggu.common.enums.MethodCallTypeEnum;
 import com.hanggu.common.exception.RpcParseException;
-import com.hanggu.common.manager.HanguRpcManager;
 import com.hanggu.common.util.CommonUtils;
 import com.hanggu.consumer.annotation.HanguMethod;
 import com.hanggu.consumer.callback.RpcResponseCallback;
 import com.hanggu.consumer.invocation.RpcReferenceHandler;
+import com.hanggu.consumer.manager.ConnectManager;
+import com.hanggu.provider.registry.impl.RedisRegistryService;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodIntrospector;
 import org.springframework.core.MethodIntrospector.MetadataLookup;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -41,6 +45,9 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
     private Class<T> interfaceClass;
 
     private Map<Method, MethodInfo> methodInfoCache;
+
+    @Autowired
+    private RedisRegistryService registryService;
 
     public ReferenceFactoryBean(String groupName, String interfaceName, String version, Class<T> interfaceClass) {
         this.groupName = groupName;
@@ -68,6 +75,21 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        this.buildMethodInfoCache();
+        // 初始化本地服务列表
+        this.initLocalServiceDirectory();
+
+    }
+
+    private void initLocalServiceDirectory() {
+        // TODO: 2023/8/4 远程拉取服务
+        List<HostInfo> infos = Collections.emptyList();
+        String key = CommonUtils.createServiceKey(this.groupName, this.interfaceName, this.version);
+        ConnectManager.cacheConnects(key, infos);
+    }
+
+    private void buildMethodInfoCache() {
+
         methodInfoCache = MethodIntrospector.selectMethods(interfaceClass,
             (MetadataLookup<MethodInfo>) method -> {
 
@@ -124,7 +146,6 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
                 }
                 return info;
             });
-
     }
 
     private String msgPrefix(Method method) {

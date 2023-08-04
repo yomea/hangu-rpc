@@ -15,7 +15,9 @@ import com.hanggu.common.exception.RpcInvokerException;
 import com.hanggu.common.manager.HanguRpcManager;
 import com.hanggu.common.util.CommonUtils;
 import com.hanggu.consumer.callback.RpcResponseCallback;
+import com.hanggu.consumer.client.ClientConnect;
 import com.hanggu.consumer.client.NettyClient;
+import com.hanggu.consumer.manager.ConnectManager;
 import com.hanggu.consumer.manager.RegistryDirectory;
 import com.hanggu.consumer.manager.RpcRequestManager;
 import io.netty.channel.Channel;
@@ -45,8 +47,6 @@ public class RpcReferenceHandler implements InvocationHandler {
 
     private String version;
 
-    private RegistryDirectory registryDirectory;
-
     private Map<Method, MethodInfo> methodInfoCache;
 
     public RpcReferenceHandler(String groupName, String interfaceName, String version,
@@ -55,31 +55,28 @@ public class RpcReferenceHandler implements InvocationHandler {
         this.interfaceName = interfaceName;
         this.version = version;
         this.methodInfoCache = methodInfoCache;
-
-        this.registryDirectory = new RegistryDirectory();
-        // TODO: 2023/8/2 注册订阅 group 的服务拉取监听器
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
         String key = CommonUtils.createServiceKey(this.groupName, this.interfaceName, this.version);
-        List<HostInfo> hostInfoList = registryDirectory.getByKey(key);
-        if (CollectionUtils.isEmpty(hostInfoList)) {
+        List<ClientConnect> connects = ConnectManager.getConnects(key);
+        if (CollectionUtils.isEmpty(connects)) {
             throw new ServiceNotFoundException(
                 String.format("未找到 groupName = %s, interfaceName = %s, version = %s的服务地址", this.groupName,
                     this.interfaceName, this.version));
         }
         // TODO: 2023/8/2 负载均衡，先随便来个随机
-        int index = RandomUtil.getRandom().nextInt(0, hostInfoList.size());
-        HostInfo hostInfo = hostInfoList.get(index);
+        int index = RandomUtil.getRandom().nextInt(0, connects.size());
+        ClientConnect connect = connects.get(index);
         // 获取客户端
         NettyClient nettyClient = HanguRpcManager.getNettyClient();
         if(Objects.isNull(nettyClient)) {
             throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "请先启动客户端！");
         }
         // 连接
-        Channel channel = nettyClient.connect(hostInfo.getHost(), hostInfo.getPort());
+        Channel channel = connect.getChannel();
 
         MethodInfo methodInfo = methodInfoCache.get(method);
 

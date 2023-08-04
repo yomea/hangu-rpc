@@ -1,10 +1,12 @@
 package com.hanggu.provider.listener;
 
+import com.hanggu.common.entity.RegistryInfo;
 import com.hanggu.common.manager.HanguRpcManager;
 import com.hanggu.common.properties.HanguProperties;
 import com.hanggu.provider.annotation.HangguService;
 import com.hanggu.provider.invoker.RpcInvoker;
 import com.hanggu.provider.manager.LocalServiceManager;
+import com.hanggu.provider.registry.RegistryService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,17 +32,19 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
     public void onApplicationEvent(ContextRefreshedEvent event) {
 
         ApplicationContext applicationContext = event.getApplicationContext();
+
         Map<String, Object> beanNameMapServiceMap = applicationContext.getBeansWithAnnotation(HangguService.class);
         if (CollectionUtils.isEmpty(beanNameMapServiceMap)) {
             return;
         }
+        RegistryService registryService = applicationContext.getBean(RegistryService.class);
         HanguRpcManager.openServer(hanguProperties);
         beanNameMapServiceMap.forEach((beanName, service) -> {
             HangguService hangguService = AnnotationUtils.getAnnotation(service.getClass(), HangguService.class);
             String groupName = hangguService.groupName();
             String interfaceName = hangguService.interfaceName();
             List<String> interfaceNameList = new ArrayList<>();
-            if (Objects.nonNull(interfaceName) && !interfaceName.trim().isEmpty()) {
+            if (Objects.isNull(interfaceName) || interfaceName.trim().isEmpty()) {
                 Class<?>[] interfaces = service.getClass().getInterfaces();
                 if (Objects.isNull(interfaces) || interfaces.length == 0) {
                     interfaceNameList.add(service.getClass().getName());
@@ -62,7 +66,12 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
                 // step 1.0 本地暴露
                 LocalServiceManager.register(key, rpcInvoker);
 
-                // TODO: 2023/8/1 远程服务暴露
+                RegistryInfo registryInfo = new RegistryInfo();
+                registryInfo.setGroupName(groupName);
+                registryInfo.setInterfaceName(interfaceName);
+                registryInfo.setVersion(version);
+                registryInfo.setHostInfo(HanguRpcManager.getLocalHost());
+                registryService.register(registryInfo);
             });
         });
     }

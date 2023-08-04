@@ -34,13 +34,13 @@ public class RpcInvoker {
         Request request = rpcInvokerContext.getRequest();
         ChannelHandlerContext ctx = rpcInvokerContext.getCtx();
 
-        Response response = null;
+        Response response;
         try {
             Method method = clss.getMethod(methodName, parameterTypeArr);
             method.setAccessible(true);
             Object result = method.invoke(service, parameterValuesArr);
             response = CommonUtils.createResponseInfo(request.getId(), request.getSerializationType(),
-                ErrorCodeEnum.SUCCESS.getCode(), method.getReturnType(), request);
+                ErrorCodeEnum.SUCCESS.getCode(), method.getReturnType(), result);
         } catch (NoSuchMethodException e) {
             response = CommonUtils.createResponseInfo(request.getId(), request.getSerializationType(),
                 ErrorCodeEnum.NOT_FOUND.getCode(), e.getClass(), e);

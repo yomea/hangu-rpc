@@ -7,7 +7,7 @@ import lombok.Data;
  * @date 2023/8/2 17:13
  */
 @Data
-public class HostInfo {
+public class HostInfo extends Object {
 
 
     /**
@@ -18,5 +18,9 @@ public class HostInfo {
     private String host;
 
     private int port;
+
+    public String toString() {
+        return this.host + ":" + this.port;
+    }
 
 }
