@@ -1,6 +1,7 @@
 package com.hanggu.common.configuration;
 
 import com.hanggu.common.constant.HangguCons;
+import com.hanggu.common.manager.HanguRpcManager;
 import com.hanggu.common.properties.HanguProperties;
 import com.hanggu.consumer.configuration.ConsumerConfiguration;
 import com.hanggu.consumer.properties.ConsumerProperties;
@@ -29,15 +30,7 @@ public class HanguAutoConfiguration {
     private HanguProperties hanguProperties;
 
     @Bean
-    public Executor rpcInvokerExecutor() {
-
-        int coreNum = hanguProperties.getCoreNum();
-        coreNum = coreNum <= 0 ? HangguCons.DEF_IO_THREADS * 4 : coreNum;
-        int maxNum = hanguProperties.getMaxNum();
-        maxNum = maxNum <= 0 ? HangguCons.CPUS * 8 : maxNum;
-
-        return new ThreadPoolExecutor(coreNum, maxNum,
-            10L, TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(10000));
+    public Executor rpcIoExecutor() {
+        return HanguRpcManager.openIoExecutor(hanguProperties);
     }
 }

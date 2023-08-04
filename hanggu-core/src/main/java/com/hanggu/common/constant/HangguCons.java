@@ -1,7 +1,6 @@
 package com.hanggu.common.constant;
 
-import com.hanggu.common.entity.RpcResult;
-import com.hanggu.consumer.callback.RpcResponseCallback;
+import java.util.concurrent.Executor;
 
 /**
  * @author wuzhenhong
@@ -22,6 +21,4 @@ public final class HangguCons {
     public static final int DEF_IO_THREADS = Math.min(Runtime.getRuntime().availableProcessors() + 1, 32);
 
     public static final int CPUS = Runtime.getRuntime().availableProcessors();
-
-    public static final RpcResponseCallback DEFAULT_CALLBACK = rpcResult -> {};
 }

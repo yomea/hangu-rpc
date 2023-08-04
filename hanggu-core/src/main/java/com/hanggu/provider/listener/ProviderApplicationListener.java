@@ -5,13 +5,11 @@ import com.hanggu.common.properties.HanguProperties;
 import com.hanggu.provider.annotation.HangguService;
 import com.hanggu.provider.invoker.RpcInvoker;
 import com.hanggu.provider.manager.LocalServiceManager;
-import com.hanggu.provider.properties.ProviderProperties;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -26,9 +24,6 @@ import org.springframework.util.CollectionUtils;
 public class ProviderApplicationListener implements ApplicationListener<ContextRefreshedEvent> {
 
     @Autowired
-    private Executor rpcInvokerExecutor;
-
-    @Autowired
     private HanguProperties hanguProperties;
 
     @Override
@@ -39,6 +34,7 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
         if (CollectionUtils.isEmpty(beanNameMapServiceMap)) {
             return;
         }
+        HanguRpcManager.openServer(hanguProperties);
         beanNameMapServiceMap.forEach((beanName, service) -> {
             HangguService hangguService = AnnotationUtils.getAnnotation(service.getClass(), HangguService.class);
             String groupName = hangguService.groupName();
@@ -69,7 +65,5 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
                 // TODO: 2023/8/1 远程服务暴露
             });
         });
-
-        HanguRpcManager.openServer(hanguProperties, rpcInvokerExecutor);
     }
 }

@@ -1,7 +1,7 @@
 package com.hanggu.consumer.listener;
 
 import com.hanggu.common.manager.HanguRpcManager;
-import java.util.concurrent.Executor;
+import com.hanggu.common.properties.HanguProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -13,11 +13,11 @@ import org.springframework.context.event.ContextRefreshedEvent;
 public class ConsumerApplicationListener implements ApplicationListener<ContextRefreshedEvent> {
 
     @Autowired
-    private Executor rpcInvokerExecutor;
+    private HanguProperties hanguProperties;
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         // 启动netty客户端
-        HanguRpcManager.openClient(rpcInvokerExecutor);
+        HanguRpcManager.openClient(hanguProperties);
     }
 }

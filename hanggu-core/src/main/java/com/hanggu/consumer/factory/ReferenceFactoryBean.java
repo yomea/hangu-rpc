@@ -5,6 +5,7 @@ import com.hanggu.common.entity.ParameterInfo;
 import com.hanggu.common.enums.ErrorCodeEnum;
 import com.hanggu.common.enums.MethodCallTypeEnum;
 import com.hanggu.common.exception.RpcParseException;
+import com.hanggu.common.manager.HanguRpcManager;
 import com.hanggu.common.util.CommonUtils;
 import com.hanggu.consumer.annotation.HanguMethod;
 import com.hanggu.consumer.callback.RpcResponseCallback;
@@ -17,11 +18,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodIntrospector;
 import org.springframework.core.MethodIntrospector.MetadataLookup;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -43,9 +42,6 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
 
     private Map<Method, MethodInfo> methodInfoCache;
 
-    @Autowired
-    private Executor rpcInvokerExecutor;
-
     public ReferenceFactoryBean(String groupName, String interfaceName, String version, Class<T> interfaceClass) {
         this.groupName = groupName;
         if (!StringUtils.hasText(interfaceName)) {
@@ -60,7 +56,7 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
     public T getObject() throws Exception {
         ClassLoader classLoader = CommonUtils.getClassLoader(ReferenceFactoryBean.class);
         RpcReferenceHandler rpcReferenceHandler =
-            new RpcReferenceHandler(this.groupName, this.interfaceName, this.version, this.rpcInvokerExecutor, this.methodInfoCache);
+            new RpcReferenceHandler(this.groupName, this.interfaceName, this.version, this.methodInfoCache);
 
         return (T) Proxy.newProxyInstance(classLoader, new Class<?>[]{interfaceClass}, rpcReferenceHandler);
     }
@@ -129,7 +125,6 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
                 return info;
             });
 
-        System.out.println();
     }
 
     private String msgPrefix(Method method) {

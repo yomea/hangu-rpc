@@ -1,11 +1,18 @@
 package com.hanggu.common.manager;
 
+import com.hanggu.common.constant.HangguCons;
+import com.hanggu.common.enums.ErrorCodeEnum;
+import com.hanggu.common.exception.RpcInvokerException;
 import com.hanggu.common.properties.HanguProperties;
 import com.hanggu.consumer.client.NettyClient;
 import com.hanggu.provider.properties.ProviderProperties;
 import com.hanggu.provider.server.NettyServer;
 import java.util.Objects;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import org.springframework.core.env.Environment;
 
 /**
  * @author wuzhenhong
@@ -15,13 +22,18 @@ public class HanguRpcManager {
 
     private static final Object CLIENT_LOCK = new Object();
     private static final Object SERVER_LOCK = new Object();
+
+    private static final Object EXECUTOR_LOCK = new Object();
     private static volatile NettyClient NETTY_CLIENT;
     private static volatile NettyServer NETTY_SERVER;
 
-    public static final NettyServer openServer(HanguProperties properties, Executor executor) {
+    public static volatile Executor GLOBAL_EXECUTOR;
+
+    public static final NettyServer openServer(HanguProperties properties) {
         if (Objects.nonNull(NETTY_SERVER)) {
             return NETTY_SERVER;
         }
+        Executor executor = openIoExecutor(properties);
         synchronized (SERVER_LOCK) {
             if (Objects.nonNull(NETTY_SERVER)) {
                 return NETTY_SERVER;
@@ -33,10 +45,11 @@ public class HanguRpcManager {
         return NETTY_SERVER;
     }
 
-    public static final NettyClient openClient(Executor executor) {
+    public static final NettyClient openClient(HanguProperties properties) {
         if (Objects.nonNull(NETTY_CLIENT)) {
             return NETTY_CLIENT;
         }
+        Executor executor = openIoExecutor(properties);
         synchronized (CLIENT_LOCK) {
             if (Objects.nonNull(NETTY_CLIENT)) {
                 return NETTY_CLIENT;
@@ -47,11 +60,37 @@ public class HanguRpcManager {
         return NETTY_CLIENT;
     }
 
+    public static final Executor openIoExecutor(HanguProperties hanguProperties) {
+        if (Objects.nonNull(GLOBAL_EXECUTOR)) {
+            return GLOBAL_EXECUTOR;
+        }
+        synchronized (EXECUTOR_LOCK) {
+            if (Objects.nonNull(GLOBAL_EXECUTOR)) {
+                return GLOBAL_EXECUTOR;
+            }
+            int coreNum = hanguProperties.getCoreNum();
+            coreNum = coreNum <= 0 ? HangguCons.DEF_IO_THREADS * 4 : coreNum;
+            int maxNum = hanguProperties.getMaxNum();
+            maxNum = maxNum <= 0 ? HangguCons.CPUS * 8 : maxNum;
+
+            Executor executor = new ThreadPoolExecutor(coreNum, maxNum,
+                10L, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(10000));
+
+            GLOBAL_EXECUTOR = executor;
+        }
+        return GLOBAL_EXECUTOR;
+    }
+
     public static final NettyServer getNettyServer() {
         return NETTY_SERVER;
     }
 
     public static final NettyClient getNettyClient() {
         return NETTY_CLIENT;
+    }
+
+    public static final Executor getGlobalExecutor() {
+        return GLOBAL_EXECUTOR;
     }
 }
