@@ -7,9 +7,11 @@ import com.hanggu.common.entity.Request;
 import com.hanggu.common.entity.RpcRequestPromise;
 import com.hanggu.common.entity.RpcRequestTransport;
 import com.hanggu.common.entity.RpcResult;
+import com.hanggu.common.entity.ServerInfo;
 import com.hanggu.common.enums.ErrorCodeEnum;
 import com.hanggu.common.enums.MethodCallTypeEnum;
 import com.hanggu.common.enums.SerializationTypeEnum;
+import com.hanggu.common.exception.NoServiceFoundException;
 import com.hanggu.common.exception.RpcInvokerException;
 import com.hanggu.common.manager.HanguRpcManager;
 import com.hanggu.common.util.CommonUtils;
@@ -39,31 +41,29 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 public class RpcReferenceHandler implements InvocationHandler {
 
-    private String groupName;
+    private ServerInfo serverInfo;
 
-    private String interfaceName;
-
-    private String version;
+    private ConnectManager connectManager;
 
     private Map<Method, MethodInfo> methodInfoCache;
 
-    public RpcReferenceHandler(String groupName, String interfaceName, String version,
+    public RpcReferenceHandler(ServerInfo serverInfo,
+        ConnectManager connectManager,
         Map<Method, MethodInfo> methodInfoCache) {
-        this.groupName = groupName;
-        this.interfaceName = interfaceName;
-        this.version = version;
+        this.serverInfo = serverInfo;
+        this.connectManager = connectManager;
         this.methodInfoCache = methodInfoCache;
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-        String key = CommonUtils.createServiceKey(this.groupName, this.interfaceName, this.version);
-        List<ClientConnect> connects = ConnectManager.getConnects(key);
+        String key = CommonUtils.createServiceKey(this.serverInfo);
+        List<ClientConnect> connects = this.connectManager.getConnects(key);
         if (CollectionUtils.isEmpty(connects)) {
             throw new ServiceNotFoundException(
-                String.format("未找到 groupName = %s, interfaceName = %s, version = %s的服务地址", this.groupName,
-                    this.interfaceName, this.version));
+                String.format("未找到 groupName = %s, interfaceName = %s, version = %s的有效服务连接地址", this.serverInfo.getGroupName(),
+                    this.serverInfo.getInterfaceName(), this.serverInfo.getVersion()));
         }
         // TODO: 2023/8/2 负载均衡，先随便来个随机
         int index = RandomUtil.getRandom().nextInt(0, connects.size());
@@ -80,13 +80,12 @@ public class RpcReferenceHandler implements InvocationHandler {
 
         Request request = new Request();
         request.setId(CommonUtils.snowFlakeNextId());
-        // todo：先写死，后边改成配置
         request.setSerializationType(SerializationTypeEnum.HESSIAN.getType());
 
         RpcRequestTransport invokerTransport = new RpcRequestTransport();
-        invokerTransport.setGroupName(this.groupName);
-        invokerTransport.setInterfaceName(this.interfaceName);
-        invokerTransport.setVersion(this.version);
+        invokerTransport.setGroupName(this.serverInfo.getGroupName());
+        invokerTransport.setInterfaceName(this.serverInfo.getInterfaceName());
+        invokerTransport.setVersion(this.serverInfo.getVersion());
         invokerTransport.setMethodName(methodInfo.getName());
 
         List<ParameterInfo> factParameterInfoList = Optional.ofNullable(methodInfo.getFactParameterInfoList())
@@ -135,11 +134,20 @@ public class RpcReferenceHandler implements InvocationHandler {
         }
 
         RpcResult rpcResult = future.getNow();
+        return dealRpcResult(rpcResult);
+    }
+
+    private Object dealRpcResult(RpcResult rpcResult) throws Throwable {
+
         if (!ErrorCodeEnum.SUCCESS.getCode().equals(rpcResult.getCode())) {
             Class<?> returnType = rpcResult.getReturnType();
             if (Throwable.class.isAssignableFrom(returnType)) {
                 Throwable e = (Throwable) rpcResult.getResult();
-                throw e;
+                if(e instanceof RpcInvokerException) {
+                    // TODO: 2023/8/7 如果不是业务调用失败产生的错误，那么故障转移或者快速失败
+                } else {
+                    throw e;
+                }
             } else {
                 throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "rpc调用发生了未知错误！");
             }

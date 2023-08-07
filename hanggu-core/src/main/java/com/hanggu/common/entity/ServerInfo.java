@@ -1,13 +1,17 @@
 package com.hanggu.common.entity;
 
 import java.util.Objects;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author wuzhenhong
  * @date 2023/8/4 17:30
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class ServerInfo {
 
     private String groupName;

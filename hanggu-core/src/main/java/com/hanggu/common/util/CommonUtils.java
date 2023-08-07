@@ -3,6 +3,7 @@ package com.hanggu.common.util;
 import cn.hutool.core.util.IdUtil;
 import com.hanggu.common.entity.Response;
 import com.hanggu.common.entity.RpcResponseTransport;
+import com.hanggu.common.entity.ServerInfo;
 
 /**
  * @author wuzhenhong
@@ -22,6 +23,11 @@ public final class CommonUtils {
     public static String createServiceKey(String groupName, String interfaceName, String version) {
 
         return groupName + "/" + version + "/" + interfaceName;
+    }
+
+    public static String createServiceKey(ServerInfo serverInfo) {
+
+        return serverInfo.getGroupName() + "/" + serverInfo.getVersion() + "/" + serverInfo.getInterfaceName();
     }
 
     public static Response createResponseInfo(

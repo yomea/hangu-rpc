@@ -1,13 +1,12 @@
 package com.hanggu.consumer.factory;
 
-import com.hanggu.common.entity.HostInfo;
 import com.hanggu.common.entity.MethodInfo;
 import com.hanggu.common.entity.ParameterInfo;
 import com.hanggu.common.entity.ServerInfo;
 import com.hanggu.common.enums.ErrorCodeEnum;
 import com.hanggu.common.enums.MethodCallTypeEnum;
 import com.hanggu.common.exception.RpcParseException;
-import com.hanggu.common.registry.impl.RedisRegistryService;
+import com.hanggu.common.registry.RegistryService;
 import com.hanggu.common.util.CommonUtils;
 import com.hanggu.consumer.annotation.HanguMethod;
 import com.hanggu.consumer.callback.RpcResponseCallback;
@@ -37,25 +36,22 @@ import org.springframework.util.StringUtils;
  */
 public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean {
 
-    private String groupName;
+    private ServerInfo serverInfo;
 
-    private String version;
-
-    private String interfaceName;
     private Class<T> interfaceClass;
 
     private Map<Method, MethodInfo> methodInfoCache;
 
+    private ConnectManager connectManager;
+
     @Autowired
-    private RedisRegistryService registryService;
+    private RegistryService registryService;
 
     public ReferenceFactoryBean(String groupName, String interfaceName, String version, Class<T> interfaceClass) {
-        this.groupName = groupName;
         if (!StringUtils.hasText(interfaceName)) {
             interfaceName = interfaceClass.getName();
         }
-        this.interfaceName = interfaceName;
-        this.version = version;
+        this.serverInfo = new ServerInfo(groupName, interfaceName, version);
         this.interfaceClass = interfaceClass;
     }
 
@@ -63,7 +59,7 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
     public T getObject() throws Exception {
         ClassLoader classLoader = CommonUtils.getClassLoader(ReferenceFactoryBean.class);
         RpcReferenceHandler rpcReferenceHandler =
-            new RpcReferenceHandler(this.groupName, this.interfaceName, this.version, this.methodInfoCache);
+            new RpcReferenceHandler(this.serverInfo, this.connectManager, this.methodInfoCache);
 
         return (T) Proxy.newProxyInstance(classLoader, new Class<?>[]{interfaceClass}, rpcReferenceHandler);
     }
@@ -78,17 +74,11 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
         this.buildMethodInfoCache();
         // 初始化本地服务列表
         this.initLocalServiceDirectory();
-
     }
 
     private void initLocalServiceDirectory() {
-        ServerInfo serverInfo = new ServerInfo();
-        serverInfo.setGroupName(this.groupName);
-        serverInfo.setInterfaceName(this.interfaceName);
-        serverInfo.setVersion(this.version);
-        List<HostInfo> infos = registryService.pullServers(serverInfo);
-        String key = CommonUtils.createServiceKey(this.groupName, this.interfaceName, this.version);
-        ConnectManager.cacheConnects(key, infos);
+
+        this.connectManager = new ConnectManager(registryService, this.serverInfo);
     }
 
     private void buildMethodInfoCache() {
@@ -155,7 +145,8 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
         return String.format(
             "group: %s, interfaceName: %s, version: %s, interfaceClass: %s，methodName：%s, "
                 + "parameterTypes: %s",
-            this.groupName, this.interfaceName, this.version, this.interfaceClass.getName(),
+            this.serverInfo.getGroupName(), this.serverInfo.getInterfaceName(), this.serverInfo.getVersion(),
+            this.interfaceClass.getName(),
             method.getName(), Arrays.stream(method.getParameterTypes()).map(Class::getName).collect(
                 Collectors.joining(",")));
     }

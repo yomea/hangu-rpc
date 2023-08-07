@@ -1,5 +1,6 @@
 package com.hanggu.consumer.listener;
 
+import com.hanggu.common.entity.RegistryInfo;
 import com.hanggu.common.entity.RegistryNotifyInfo;
 
 /**
@@ -10,6 +11,6 @@ import com.hanggu.common.entity.RegistryNotifyInfo;
  */
 public interface RegistryNotifyListener {
 
-    void notify(RegistryNotifyInfo notifyInfo);
+    void registryNotify(RegistryNotifyInfo notifyInfo);
 
 }

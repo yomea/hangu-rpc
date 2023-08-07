@@ -4,20 +4,16 @@ import java.util.List;
 import lombok.Data;
 
 /**
+ * 注册通知明细
+ *
  * @author wuzhenhong
- * @date 2023/8/2 17:21
+ * @date 2023/8/2 17:23
  */
 @Data
 public class RegistryNotifyInfo {
 
-    /**
-     * 客户端订阅的组
-     */
-    private String groupName;
+    private ServerInfo serverInfo;
 
-    /**
-     * 发生变更的明细
-     */
-    private List<RegistryNotifyItem> itemList;
+    private List<HostInfo> hostInfos;
 
 }

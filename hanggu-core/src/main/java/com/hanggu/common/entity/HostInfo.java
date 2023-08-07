@@ -12,11 +12,6 @@ import lombok.Data;
 public class HostInfo implements Serializable {
 
 
-    /**
-     * @see com.hanggu.common.enums.OptionTypeEnum
-     */
-    private Integer option;
-
     private String host;
 
     private int port;
@@ -34,16 +29,15 @@ public class HostInfo implements Serializable {
             return false;
         }
         HostInfo other = (HostInfo) obj;
-        return Objects.equals(this.option, other.getOption())
-            &&
+        return
             Objects.equals(this.host, other.getHost())
-            &&
-            Objects.equals(this.port, other.getPort());
+                &&
+                Objects.equals(this.port, other.getPort());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.option, this.host, this.port);
+        return Objects.hash(this.host, this.port);
     }
 
 
