@@ -9,6 +9,7 @@ import java.lang.annotation.Target;
 
 /**
  * 异步调用注解
+ *
  * @author wuzhenhong
  * @date 2023/8/3 16:05
  */

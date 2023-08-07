@@ -1,6 +1,5 @@
 package com.hanggu.common.entity;
 
-import com.hanggu.consumer.callback.RpcResponseCallback;
 import lombok.Data;
 
 /**

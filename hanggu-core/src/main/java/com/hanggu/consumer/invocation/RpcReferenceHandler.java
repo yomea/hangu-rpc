@@ -1,7 +1,6 @@
 package com.hanggu.consumer.invocation;
 
 import cn.hutool.core.util.RandomUtil;
-import com.hanggu.common.entity.HostInfo;
 import com.hanggu.common.entity.MethodInfo;
 import com.hanggu.common.entity.ParameterInfo;
 import com.hanggu.common.entity.Request;
@@ -18,7 +17,6 @@ import com.hanggu.consumer.callback.RpcResponseCallback;
 import com.hanggu.consumer.client.ClientConnect;
 import com.hanggu.consumer.client.NettyClient;
 import com.hanggu.consumer.manager.ConnectManager;
-import com.hanggu.consumer.manager.RegistryDirectory;
 import com.hanggu.consumer.manager.RpcRequestManager;
 import io.netty.channel.Channel;
 import java.lang.reflect.InvocationHandler;
@@ -72,7 +70,7 @@ public class RpcReferenceHandler implements InvocationHandler {
         ClientConnect connect = connects.get(index);
         // 获取客户端
         NettyClient nettyClient = HanguRpcManager.getNettyClient();
-        if(Objects.isNull(nettyClient)) {
+        if (Objects.isNull(nettyClient)) {
             throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "请先启动客户端！");
         }
         // 连接
@@ -81,7 +79,7 @@ public class RpcReferenceHandler implements InvocationHandler {
         MethodInfo methodInfo = methodInfoCache.get(method);
 
         Request request = new Request();
-        request.setId(CommonUtils.incrementId());
+        request.setId(CommonUtils.snowFlakeNextId());
         // todo：先写死，后边改成配置
         request.setSerializationType(SerializationTypeEnum.HESSIAN.getType());
 
@@ -110,8 +108,9 @@ public class RpcReferenceHandler implements InvocationHandler {
         List<RpcResponseCallback> callbacks = Collections.emptyList();
         if (MethodCallTypeEnum.ASYNC_PARAMETER.getType().equals(callType)) {
             callbacks = Optional.ofNullable(methodInfo.getCallbackParameterInfoList()).orElse(Collections.emptyList())
-                .stream().map(parameterInfo -> (RpcResponseCallback) args[parameterInfo.getIndex()]).collect(Collectors.toList());
-        } else if(MethodCallTypeEnum.ASYNC_SPECIFY.getType().equals(callType)) {
+                .stream().map(parameterInfo -> (RpcResponseCallback) args[parameterInfo.getIndex()])
+                .collect(Collectors.toList());
+        } else if (MethodCallTypeEnum.ASYNC_SPECIFY.getType().equals(callType)) {
             callbacks = Collections.singletonList(methodInfo.getCallback());
         }
         RpcRequestPromise<RpcResult> future = new RpcRequestPromise<>(callbacks, channel.eventLoop());
@@ -126,7 +125,7 @@ public class RpcReferenceHandler implements InvocationHandler {
             }
         });
 
-        if(!MethodCallTypeEnum.SYNC.getType().equals(callType)) {
+        if (!MethodCallTypeEnum.SYNC.getType().equals(callType)) {
             return null;
         }
 

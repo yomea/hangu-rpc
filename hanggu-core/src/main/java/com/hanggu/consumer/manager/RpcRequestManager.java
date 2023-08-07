@@ -2,7 +2,6 @@ package com.hanggu.consumer.manager;
 
 import com.hanggu.common.entity.RpcRequestPromise;
 import com.hanggu.common.entity.RpcResult;
-import io.netty.util.concurrent.DefaultPromise;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

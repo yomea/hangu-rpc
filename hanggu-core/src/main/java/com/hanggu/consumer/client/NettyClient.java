@@ -10,7 +10,6 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -55,9 +54,8 @@ public class NettyClient {
                             .addLast(new ByteFrameDecoder())
                             .addLast(new RequestMessageCodec()) // 请求与响应编解码器
                             .addLast(new HeartBeatEncoder()) // 心跳编码器
-                            // 写超时定义为2s，HeartBeatPongHandler 将会接收到写超时事件，此时主动向服务器发送心跳
-                            // 每隔 2s 发送一次心跳
-                            .addLast(new IdleStateHandler(6, 2, 0, TimeUnit.SECONDS))
+                            // 每隔 2s 发送一次心跳，超过三次没有收到响应，也就是三倍的心跳时间，重连
+                            .addLast(new IdleStateHandler(2, 0, 0, TimeUnit.SECONDS))
                             .addLast(new HeartBeatPongHandler(NettyClient.this)) // 心跳编码器
                             .addLast(new ResponseMessageHandler(executor));
                     }

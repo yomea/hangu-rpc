@@ -38,13 +38,13 @@ public class HeartBeatPongHandler extends SimpleChannelInboundHandler<PingPong> 
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
             IdleState idleState = idleStateEvent.state();
-            // 写超时，发送心跳
-            if (IdleState.WRITER_IDLE == idleState) {
+            // 读超时，发送心跳
+            if (IdleState.READER_IDLE == idleState) {
                 if (!ctx.channel().isActive()) {
                     this.reconnect(ctx);
                 } else {
                     PingPong pingPong = new PingPong();
-                    pingPong.setId(CommonUtils.incrementId());
+                    pingPong.setId(CommonUtils.snowFlakeNextId());
                     pingPong.setSerializationType(SerializationTypeEnum.HESSIAN.getType());
                     // 发送心跳（从当前 context 往前）
                     ctx.writeAndFlush(pingPong).addListener(future -> {
@@ -52,12 +52,11 @@ public class HeartBeatPongHandler extends SimpleChannelInboundHandler<PingPong> 
                         if (!future.isSuccess() && ++retryBeat > 3) {
                             // 重连
                             this.reconnect(ctx);
+                        } else {
+                            retryBeat = 0;
                         }
                     });
                 }
-            } else if (IdleState.READER_IDLE == idleState) {
-                // 如果该通道超过两倍心跳都没有接收到任何读事件，包括response和心跳响应，那么尝试重连
-                this.reconnect(ctx);
             }
         }
     }
@@ -72,7 +71,7 @@ public class HeartBeatPongHandler extends SimpleChannelInboundHandler<PingPong> 
             ctx.channel().eventLoop().schedule(() -> {
                 // 重连创建一个新的通道
                 nettyClient.reconnect(remoteAddress).addListener(f -> {
-                    if(!f.isSuccess()) {
+                    if (!f.isSuccess()) {
                         log.error("重新连接{}失败！", remoteAddress.toString());
                     }
                 });

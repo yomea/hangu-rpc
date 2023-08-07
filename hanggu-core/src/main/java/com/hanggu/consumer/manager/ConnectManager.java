@@ -22,7 +22,7 @@ public class ConnectManager {
     private static final Map<String, List<ClientConnect>> KEY_CHANNELS = new ConcurrentHashMap<>(8192);
 
     public static final void cacheConnects(String key, List<HostInfo> hostInfoList) {
-        if(CollectionUtils.isEmpty(hostInfoList)) {
+        if (CollectionUtils.isEmpty(hostInfoList)) {
             return;
         }
         NettyClient nettyClient = HanguRpcManager.getNettyClient();
@@ -40,7 +40,8 @@ public class ConnectManager {
 
     public static final List<ClientConnect> getConnects(String key) {
         List<ClientConnect> connects = KEY_CHANNELS.getOrDefault(key, Collections.emptyList());
-        return connects.stream().filter(connect -> Objects.nonNull(connect.getChannel()) && connect.getChannel().isActive())
+        return connects.stream()
+            .filter(connect -> Objects.nonNull(connect.getChannel()) && connect.getChannel().isActive())
             .collect(Collectors.toList());
     }
 

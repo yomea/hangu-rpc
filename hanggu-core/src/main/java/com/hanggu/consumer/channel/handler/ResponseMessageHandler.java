@@ -8,7 +8,6 @@ import com.hanggu.consumer.callback.RpcResponseCallback;
 import com.hanggu.consumer.manager.RpcRequestManager;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.util.concurrent.DefaultPromise;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -35,7 +34,7 @@ public class ResponseMessageHandler extends SimpleChannelInboundHandler<Response
 
         Long id = response.getId();
         RpcRequestPromise<RpcResult> future = RpcRequestManager.getFuture(id);
-        if(Objects.isNull(future) || future.isCancelled()) {
+        if (Objects.isNull(future) || future.isCancelled()) {
             log.warn("无效的响应请求！id = {}", id);
             return;
         }
@@ -46,8 +45,8 @@ public class ResponseMessageHandler extends SimpleChannelInboundHandler<Response
         rpcResult.setReturnType(rpcResponseTransport.getType());
         rpcResult.setResult(rpcResponseTransport.getVale());
 
-        List<RpcResponseCallback> callbacks =  future.getCallbacks();
-        if(CollectionUtils.isEmpty(callbacks)) {
+        List<RpcResponseCallback> callbacks = future.getCallbacks();
+        if (CollectionUtils.isEmpty(callbacks)) {
             future.setSuccess(rpcResult);
         } else {
             executor.execute(() -> {

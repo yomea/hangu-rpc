@@ -1,7 +1,5 @@
 package com.hanggu.common.constant;
 
-import java.util.concurrent.Executor;
-
 /**
  * @author wuzhenhong
  * @date 2023/7/31 15:53

@@ -3,8 +3,6 @@ package com.hanggu.provider.server;
 import com.hanggu.common.channel.handler.ByteFrameDecoder;
 import com.hanggu.common.channel.handler.HeartBeatEncoder;
 import com.hanggu.common.constant.HangguCons;
-import com.hanggu.common.entity.HostInfo;
-import com.hanggu.common.properties.HanguProperties;
 import com.hanggu.provider.channel.handler.HeartBeatPingHandler;
 import com.hanggu.provider.channel.handler.RequestMessageHandler;
 import com.hanggu.provider.channel.handler.ResponseMessageCodec;
@@ -20,7 +18,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
-import java.net.SocketAddress;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +52,7 @@ public class NettyServer {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
-                        ch.pipeline().addLast("logging",loggingHandler)
+                        ch.pipeline().addLast("logging", loggingHandler)
                             // 继承 LengthFieldBasedFrameDecoder 用于拆包
                             .addLast(new ByteFrameDecoder())
                             // 用于编解码
@@ -71,7 +68,7 @@ public class NettyServer {
                     }
                 });
             channel = serverBootstrap.bind(properties.getPort()).addListener(future -> {
-                if(!future.isSuccess()) {
+                if (!future.isSuccess()) {
                     log.error("服务启动失败---》绑定失败！！！");
                 }
             }).channel();

@@ -1,8 +1,8 @@
 package com.hanggu.common.util;
 
+import cn.hutool.core.util.IdUtil;
 import com.hanggu.common.entity.Response;
 import com.hanggu.common.entity.RpcResponseTransport;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author wuzhenhong
@@ -14,10 +14,9 @@ public final class CommonUtils {
         throw new RuntimeException("不允许实例化！");
     }
 
-    private static final AtomicLong ATOMIC_LONG = new AtomicLong(1);
+    public static final Long snowFlakeNextId() {
 
-    public static final Long incrementId() {
-        return ATOMIC_LONG.incrementAndGet();
+        return IdUtil.createSnowflake(1, 1).nextId();
     }
 
     public static String createServiceKey(String groupName, String interfaceName, String version) {

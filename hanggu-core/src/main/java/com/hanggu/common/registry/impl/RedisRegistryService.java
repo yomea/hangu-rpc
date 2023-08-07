@@ -1,7 +1,6 @@
 package com.hanggu.common.registry.impl;
 
 import cn.hutool.core.map.MapUtil;
-import cn.hutool.core.util.NumberUtil;
 import com.hanggu.common.entity.HostInfo;
 import com.hanggu.common.entity.RegistryInfo;
 import com.hanggu.common.entity.ServerInfo;
@@ -13,7 +12,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.springframework.util.NumberUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisSentinelPool;
 
@@ -33,7 +31,7 @@ public class RedisRegistryService implements RegistryService {
     public void register(RegistryInfo registryInfo) {
 
         Jedis jedis = this.jedisSentinelPool.getResource();
-        String key = this.createKey();
+        String key = this.createKey(registryInfo);
         String value = registryInfo.getHostInfo().toString();
         // 一分钟过期
         String expire = String.valueOf(System.currentTimeMillis() + 60L);
@@ -42,7 +40,8 @@ public class RedisRegistryService implements RegistryService {
             jedis.publish(key, RegistryConstants.REGISTER);
         } catch (Exception e) {
             throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(),
-                String.format("groupName：%s，interfaceName：%s, version：%s 注册到redis失败！", groupName, interfaceName, version));
+                String.format("groupName：%s，interfaceName：%s, version：%s 注册到redis失败！", registryInfo.getGroupName(),
+                    registryInfo.getInterfaceName(), registryInfo.getVersion()));
         } finally {
             // 释放连接
             jedis.close();
@@ -68,8 +67,8 @@ public class RedisRegistryService implements RegistryService {
     public List<HostInfo> pullServers(ServerInfo serverInfo) {
         Jedis jedis = this.jedisSentinelPool.getResource();
         String key = this.createKey(serverInfo);
-        Map<String, String> valueMapExpire =  jedis.hgetAll(key);
-        if(MapUtil.isEmpty(valueMapExpire)) {
+        Map<String, String> valueMapExpire = jedis.hgetAll(key);
+        if (MapUtil.isEmpty(valueMapExpire)) {
             return Collections.emptyList();
         }
         long currentTime = System.currentTimeMillis();
