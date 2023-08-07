@@ -7,5 +7,6 @@ package com.hanggu.provider;
 public class RegistryConstants {
 
     public static final String REGISTER = "register";
+    public static final String REFRESH = "refresh";
 
 }

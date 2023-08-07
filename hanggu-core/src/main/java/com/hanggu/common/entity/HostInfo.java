@@ -1,5 +1,7 @@
 package com.hanggu.common.entity;
 
+import java.io.Serializable;
+import java.util.Objects;
 import lombok.Data;
 
 /**
@@ -7,7 +9,7 @@ import lombok.Data;
  * @date 2023/8/2 17:13
  */
 @Data
-public class HostInfo extends Object {
+public class HostInfo implements Serializable {
 
 
     /**
@@ -22,5 +24,27 @@ public class HostInfo extends Object {
     public String toString() {
         return this.host + ":" + this.port;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof HostInfo)) {
+            return false;
+        }
+        HostInfo other = (HostInfo) obj;
+        return Objects.equals(this.option, other.getOption())
+            &&
+            Objects.equals(this.host, other.getHost())
+            &&
+            Objects.equals(this.port, other.getPort());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.option, this.host, this.port);
+    }
+
 
 }
