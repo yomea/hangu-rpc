@@ -13,7 +13,9 @@ public enum ErrorCodeEnum {
 
     SUCCESS(200, "请求成功！"),
     FAILURE(500, "调用错误！"),
-    FORBID(403, "调用错误！"),
+    
+    TIME_OUT(502, "调用超时！"),
+    FORBID(403, "禁止访问！"),
     NOT_FOUND(404, "服务不存在!");
 
 

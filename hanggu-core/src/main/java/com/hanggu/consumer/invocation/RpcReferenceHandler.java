@@ -113,7 +113,7 @@ public class RpcReferenceHandler implements InvocationHandler {
             callbacks = Collections.singletonList(methodInfo.getCallback());
         }
         RpcRequestPromise<RpcResult> future = new RpcRequestPromise<>(callbacks, channel.eventLoop());
-
+        
         channel.writeAndFlush(request).addListener(wFuture -> {
             // 消息发送成功之后，保存请求
             if (wFuture.isSuccess()) {
@@ -125,12 +125,13 @@ public class RpcReferenceHandler implements InvocationHandler {
         });
 
         if (!MethodCallTypeEnum.SYNC.getType().equals(callType)) {
+            // TODO: 2023/8/7 如果是异步的加上时间轮或者调度线程池处理超时的任务
             return null;
         }
 
         if (!future.await(methodInfo.getTimeout(), TimeUnit.SECONDS)) {
             log.error("请求超时！");
-            throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "请求超时！");
+            throw new RpcInvokerException(ErrorCodeEnum.TIME_OUT.getCode(), "请求超时！");
         }
 
         RpcResult rpcResult = future.getNow();
