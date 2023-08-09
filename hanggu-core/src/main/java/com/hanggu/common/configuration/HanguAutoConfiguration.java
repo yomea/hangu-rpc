@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -44,6 +46,7 @@ public class HanguAutoConfiguration {
         private JedisConfigPropertis configPropertis;
 
         @Bean
+        @ConditionalOnMissingBean(JedisPoolConfig.class)
         public JedisPoolConfig jedisPoolConfig() {
             JedisPoolConfig config = new JedisPoolConfig();
             config.setTestWhileIdle(true);
@@ -57,6 +60,7 @@ public class HanguAutoConfiguration {
         }
 
         @Bean
+        @ConditionalOnMissingBean(JedisSentinelPool.class)
         public JedisSentinelPool jedisSentinelPool(JedisPoolConfig jedisPoolConfig) {
             HashSet<String> infos = new HashSet<>();
             String[] split = configPropertis.getNodes().split(",");
@@ -66,6 +70,7 @@ public class HanguAutoConfiguration {
         }
 
         @Bean
+        @ConditionalOnMissingBean(RegistryService.class)
         public RegistryService redisRegistryService(JedisSentinelPool jedisSentinelPool) {
             return new RedisRegistryService(jedisSentinelPool);
         }
