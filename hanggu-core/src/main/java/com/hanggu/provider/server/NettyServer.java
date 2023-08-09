@@ -52,13 +52,14 @@ public class NettyServer {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
-                        ch.pipeline().addLast("logging", loggingHandler)
+                        ch.pipeline()
                             // 继承 LengthFieldBasedFrameDecoder 用于拆包
                             .addLast(new ByteFrameDecoder())
                             // 用于编解码
                             .addLast(new ResponseMessageCodec())
                             // 用于心跳编码
                             .addLast(new HeartBeatEncoder())
+                            .addLast("logging", loggingHandler)
                             // 读写时间超过8s，表示该链接已失效
                             .addLast(new IdleStateHandler(0, 0, 8, TimeUnit.SECONDS))
                             // 心跳处理器

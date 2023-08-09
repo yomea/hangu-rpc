@@ -9,6 +9,8 @@ import com.hanggu.provider.server.NettyServer;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -22,10 +24,12 @@ public class HanguRpcManager {
     private static final Object SERVER_LOCK = new Object();
 
     private static final Object EXECUTOR_LOCK = new Object();
+    private static final Object SCHEDULE_LOCK = new Object();
     private static volatile NettyClient NETTY_CLIENT;
     private static volatile NettyServer NETTY_SERVER;
 
     private static volatile Executor GLOBAL_EXECUTOR;
+    private static volatile ScheduledExecutorService SCHEDULE_EXECUTOR;
 
     private static HostInfo LOCAL_HOST;
 
@@ -54,6 +58,7 @@ public class HanguRpcManager {
             return NETTY_CLIENT;
         }
         Executor executor = openIoExecutor(properties);
+        openScheduledExecutor(properties);
         synchronized (CLIENT_LOCK) {
             if (Objects.nonNull(NETTY_CLIENT)) {
                 return NETTY_CLIENT;
@@ -86,6 +91,21 @@ public class HanguRpcManager {
         return GLOBAL_EXECUTOR;
     }
 
+    public static final Executor openScheduledExecutor(HanguProperties hanguProperties) {
+        if (Objects.nonNull(SCHEDULE_EXECUTOR)) {
+            return SCHEDULE_EXECUTOR;
+        }
+        synchronized (SCHEDULE_LOCK) {
+            if (Objects.nonNull(SCHEDULE_EXECUTOR)) {
+                return SCHEDULE_EXECUTOR;
+            }
+            ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(HangguCons.CPUS);
+
+            SCHEDULE_EXECUTOR = executor;
+        }
+        return SCHEDULE_EXECUTOR;
+    }
+
     public static final NettyServer getNettyServer() {
         return NETTY_SERVER;
     }
@@ -100,5 +120,9 @@ public class HanguRpcManager {
 
     public static final HostInfo getLocalHost() {
         return LOCAL_HOST;
+    }
+
+    public static final ScheduledExecutorService getSchedule() {
+        return SCHEDULE_EXECUTOR;
     }
 }

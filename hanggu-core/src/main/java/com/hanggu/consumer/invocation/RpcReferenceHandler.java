@@ -13,6 +13,7 @@ import com.hanggu.common.enums.MethodCallTypeEnum;
 import com.hanggu.common.enums.SerializationTypeEnum;
 import com.hanggu.common.exception.NoServiceFoundException;
 import com.hanggu.common.exception.RpcInvokerException;
+import com.hanggu.common.exception.RpcInvokerTimeoutException;
 import com.hanggu.common.manager.HanguRpcManager;
 import com.hanggu.common.util.CommonUtils;
 import com.hanggu.consumer.callback.RpcResponseCallback;
@@ -125,7 +126,22 @@ public class RpcReferenceHandler implements InvocationHandler {
         });
 
         if (!MethodCallTypeEnum.SYNC.getType().equals(callType)) {
-            // TODO: 2023/8/7 如果是异步的加上时间轮或者调度线程池处理超时的任务
+            HanguRpcManager.getSchedule().schedule(() -> {
+                if(future.isSuccess()) {
+                    return;
+                }
+                // 取消
+                future.cancel(false);
+                List<RpcResponseCallback> callbackList = Optional.ofNullable(future.getCallbacks())
+                    .orElse(Collections.emptyList());
+                RpcResult rpcResult = new RpcResult();
+                rpcResult.setCode(ErrorCodeEnum.TIME_OUT.getCode());
+                rpcResult.setReturnType(RpcInvokerTimeoutException.class);
+                rpcResult.setResult(new RpcInvokerTimeoutException(ErrorCodeEnum.TIME_OUT.getCode(), "调用超时！"));
+                callbackList.stream().forEach(callback -> {
+                    callback.callback(rpcResult);
+                });
+            }, methodInfo.getTimeout(), TimeUnit.SECONDS);
             return null;
         }
 

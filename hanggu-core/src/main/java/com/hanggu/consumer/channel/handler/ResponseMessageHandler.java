@@ -47,7 +47,9 @@ public class ResponseMessageHandler extends SimpleChannelInboundHandler<Response
 
         List<RpcResponseCallback> callbacks = future.getCallbacks();
         if (CollectionUtils.isEmpty(callbacks)) {
-            future.setSuccess(rpcResult);
+            if(!future.trySuccess(rpcResult)) {
+                return;
+            }
         } else {
             executor.execute(() -> {
                 callbacks.stream().forEach(callback -> {
