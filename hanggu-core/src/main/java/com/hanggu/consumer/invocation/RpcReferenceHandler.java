@@ -1,6 +1,7 @@
 package com.hanggu.consumer.invocation;
 
 import cn.hutool.core.util.RandomUtil;
+import com.hanggu.common.context.HanguContext;
 import com.hanggu.common.entity.MethodInfo;
 import com.hanggu.common.entity.ParameterInfo;
 import com.hanggu.common.entity.Request;
@@ -11,7 +12,6 @@ import com.hanggu.common.entity.ServerInfo;
 import com.hanggu.common.enums.ErrorCodeEnum;
 import com.hanggu.common.enums.MethodCallTypeEnum;
 import com.hanggu.common.enums.SerializationTypeEnum;
-import com.hanggu.common.exception.NoServiceFoundException;
 import com.hanggu.common.exception.RpcInvokerException;
 import com.hanggu.common.exception.RpcInvokerTimeoutException;
 import com.hanggu.common.manager.HanguRpcManager;
@@ -125,6 +125,8 @@ public class RpcReferenceHandler implements InvocationHandler {
             }
         });
 
+        int timeout = this.getTimeout(methodInfo);
+
         if (!MethodCallTypeEnum.SYNC.getType().equals(callType)) {
             HanguRpcManager.getSchedule().schedule(() -> {
                 if(future.isSuccess()) {
@@ -143,17 +145,29 @@ public class RpcReferenceHandler implements InvocationHandler {
                 callbackList.stream().forEach(callback -> {
                     callback.callback(rpcResult);
                 });
-            }, methodInfo.getTimeout(), TimeUnit.SECONDS);
+            }, timeout, TimeUnit.SECONDS);
             return null;
         }
 
-        if (!future.await(methodInfo.getTimeout(), TimeUnit.SECONDS)) {
+        if (!future.await(timeout, TimeUnit.SECONDS)) {
             log.error("请求超时！");
             throw new RpcInvokerException(ErrorCodeEnum.TIME_OUT.getCode(), "请求超时！");
         }
 
         RpcResult rpcResult = future.getNow();
         return dealRpcResult(rpcResult);
+    }
+
+    private Integer getTimeout(MethodInfo methodInfo) {
+        Integer timeout = HanguContext.getValue(HanguContext.DYNAMIC_TIME_OUT);
+        if(Objects.nonNull(timeout) && timeout > 0) {
+            return timeout;
+        }
+        timeout = methodInfo.getTimeout();
+        if(Objects.nonNull(timeout) && timeout > 0) {
+            return timeout;
+        }
+        return 5;
     }
 
     private Object dealRpcResult(RpcResult rpcResult) throws Throwable {
