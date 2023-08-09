@@ -131,7 +131,9 @@ public class RpcReferenceHandler implements InvocationHandler {
                     return;
                 }
                 // 取消
-                future.cancel(false);
+                if(!future.cancel(false)) {
+                    return;
+                }
                 List<RpcResponseCallback> callbackList = Optional.ofNullable(future.getCallbacks())
                     .orElse(Collections.emptyList());
                 RpcResult rpcResult = new RpcResult();
