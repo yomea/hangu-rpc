@@ -25,4 +25,8 @@ public class HanguContext {
     public static <T> T putValue(String key, T value) {
         return (T) CONTEXT.get().put(key, value);
     }
+
+    public static void remove() {
+        CONTEXT.remove();
+    }
 }
