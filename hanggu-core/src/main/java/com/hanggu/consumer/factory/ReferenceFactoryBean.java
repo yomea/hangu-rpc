@@ -55,6 +55,12 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
         this.interfaceClass = interfaceClass;
     }
 
+    public ReferenceFactoryBean(String groupName, String interfaceName, String version, Class<T> interfaceClass,
+        RegistryService registryService) {
+        this(groupName, interfaceName, version, interfaceClass);
+        this.registryService = registryService;
+    }
+
     @Override
     public T getObject() throws Exception {
         ClassLoader classLoader = CommonUtils.getClassLoader(ReferenceFactoryBean.class);
@@ -149,5 +155,9 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
             this.interfaceClass.getName(),
             method.getName(), Arrays.stream(method.getParameterTypes()).map(Class::getName).collect(
                 Collectors.joining(",")));
+    }
+
+    public void setRegistryService(RegistryService registryService) {
+        this.registryService = registryService;
     }
 }
