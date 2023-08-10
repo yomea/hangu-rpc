@@ -12,7 +12,7 @@ import org.hanggu.consumer.UserService;
 public class UserServiceImpl implements UserService {
 
     @Override
-    public String getName(RpcResponseCallback callback) {
+    public String getName() {
         return "小风";
     }
 }

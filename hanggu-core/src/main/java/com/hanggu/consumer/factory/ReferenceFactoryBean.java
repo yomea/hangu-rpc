@@ -6,6 +6,8 @@ import com.hanggu.common.entity.ServerInfo;
 import com.hanggu.common.enums.ErrorCodeEnum;
 import com.hanggu.common.enums.MethodCallTypeEnum;
 import com.hanggu.common.exception.RpcParseException;
+import com.hanggu.common.manager.HanguRpcManager;
+import com.hanggu.common.properties.HanguProperties;
 import com.hanggu.common.registry.RegistryService;
 import com.hanggu.common.util.CommonUtils;
 import com.hanggu.consumer.annotation.HanguMethod;
@@ -47,6 +49,9 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
     @Autowired
     private RegistryService registryService;
 
+    @Autowired
+    private HanguProperties hanguProperties;
+
     public ReferenceFactoryBean(String groupName, String interfaceName, String version, Class<T> interfaceClass) {
         if (!StringUtils.hasText(interfaceName)) {
             interfaceName = interfaceClass.getName();
@@ -56,9 +61,10 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
     }
 
     public ReferenceFactoryBean(String groupName, String interfaceName, String version, Class<T> interfaceClass,
-        RegistryService registryService) {
+        RegistryService registryService, HanguProperties hanguProperties) {
         this(groupName, interfaceName, version, interfaceClass);
         this.registryService = registryService;
+        this.hanguProperties = hanguProperties;
     }
 
     @Override
@@ -77,6 +83,9 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        // 启动netty客户端
+        HanguRpcManager.openClient(hanguProperties);
+
         this.buildMethodInfoCache();
         // 初始化本地服务列表
         this.initLocalServiceDirectory();

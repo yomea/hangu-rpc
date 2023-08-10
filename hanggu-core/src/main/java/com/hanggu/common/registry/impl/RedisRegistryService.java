@@ -37,7 +37,7 @@ import redis.clients.jedis.JedisSentinelPool;
 @Slf4j
 public class RedisRegistryService implements RegistryService {
 
-    private static final Long EXPIRE_TIME = 60L * 1000L;
+    private static final Long EXPIRE_TIME = 12L * 1000L;
 
     private JedisSentinelPool jedisSentinelPool;
 
@@ -48,7 +48,7 @@ public class RedisRegistryService implements RegistryService {
 
     public RedisRegistryService(JedisSentinelPool jedisSentinelPool) {
         this.jedisSentinelPool = jedisSentinelPool;
-        expireExecutor.schedule(() -> this.refreshExpire(), 2, TimeUnit.SECONDS);
+        expireExecutor.scheduleWithFixedDelay(() -> this.refreshExpire(), 4, 4, TimeUnit.SECONDS);
     }
 
     @Override
@@ -73,10 +73,9 @@ public class RedisRegistryService implements RegistryService {
     @Override
     public void subscribe(RegistryNotifyListener listener, ServerInfo serverInfo) {
         String key = this.createKey(serverInfo);
-        Jedis jedis = this.jedisSentinelPool.getResource();
 
         JedisPubSubNotifier notifier = new JedisPubSubNotifier();
-        notifier.setJedis(jedis);
+        notifier.setJedisSentinelPool(this.jedisSentinelPool);
         notifier.setKey(key);
         notifier.setRegistryNotifyListener(listener);
         notifier.setServerInfo(serverInfo);
@@ -87,7 +86,12 @@ public class RedisRegistryService implements RegistryService {
     public List<HostInfo> pullServers(ServerInfo serverInfo) {
         Jedis jedis = this.jedisSentinelPool.getResource();
         String key = this.createKey(serverInfo);
-        Map<String, String> valueMapExpire = jedis.hgetAll(key);
+        Map<String, String> valueMapExpire;
+        try {
+            valueMapExpire = jedis.hgetAll(key);
+        } finally {
+            jedis.close();
+        }
         if (MapUtil.isEmpty(valueMapExpire)) {
             return Collections.emptyList();
         }
@@ -127,17 +131,21 @@ public class RedisRegistryService implements RegistryService {
     private void clearExpireData() {
 
         Jedis jedis = jedisSentinelPool.getResource();
-        registered.stream().forEach(serverInfo -> {
-            String key = this.createKey(serverInfo);
-            Map<String, String> hostMap = jedis.hgetAll(key);
-            List<String> expireKeyList = hostMap.entrySet().stream().filter(entry -> {
-                Long time = Long.parseLong(entry.getValue());
-                return System.currentTimeMillis() + EXPIRE_TIME < time;
-            }).map(Entry::getKey).collect(Collectors.toList());
-            if(CollectionUtil.isNotEmpty(expireKeyList)) {
-                jedis.hdel(key, expireKeyList.toArray(new String[0]));
-            }
-        });
+        try {
+            registered.stream().forEach(serverInfo -> {
+                String key = this.createKey(serverInfo);
+                Map<String, String> hostMap = jedis.hgetAll(key);
+                List<String> expireKeyList = hostMap.entrySet().stream().filter(entry -> {
+                    Long time = Long.parseLong(entry.getValue());
+                    return System.currentTimeMillis() + EXPIRE_TIME < time;
+                }).map(Entry::getKey).collect(Collectors.toList());
+                if (CollectionUtil.isNotEmpty(expireKeyList)) {
+                    jedis.hdel(key, expireKeyList.toArray(new String[0]));
+                }
+            });
+        } finally {
+            jedis.close();
+        }
     }
 
     private void doRegister(List<RegistryInfo> registryInfoList, String publicMessage) {
@@ -174,7 +182,7 @@ public class RedisRegistryService implements RegistryService {
     private static class JedisPubSubNotifier extends JedisPubSub {
 
         private RegistryNotifyListener registryNotifyListener;
-        private Jedis jedis;
+        private JedisSentinelPool jedisSentinelPool;
         private ServerInfo serverInfo;
         private String key;
 
@@ -184,7 +192,13 @@ public class RedisRegistryService implements RegistryService {
 
             }*/
             // 刷新
-            Map<String, String> hostMap = jedis.hgetAll(this.key);
+            Jedis jedis = jedisSentinelPool.getResource();
+            Map<String, String> hostMap;
+            try {
+                hostMap = jedis.hgetAll(this.key);
+            } finally {
+                jedis.close();
+            }
             if(Objects.isNull(hostMap) || hostMap.isEmpty()) {
                 return;
             }
@@ -221,10 +235,10 @@ public class RedisRegistryService implements RegistryService {
         @Override
         public void run() {
 
-            Jedis jedis = notifier.getJedis();
+            Jedis jedis = notifier.getJedisSentinelPool().getResource();
             try {
                 // 阻塞
-                notifier.getJedis().subscribe(notifier, notifier.getKey());
+                jedis.subscribe(notifier, notifier.getKey());
             } finally {
                 jedis.close();
             }

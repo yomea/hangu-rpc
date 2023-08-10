@@ -69,7 +69,7 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
                 // step 2.0 远程暴露
                 RegistryInfo registryInfo = new RegistryInfo();
                 registryInfo.setGroupName(groupName);
-                registryInfo.setInterfaceName(interfaceName);
+                registryInfo.setInterfaceName(intName);
                 registryInfo.setVersion(version);
                 registryInfo.setHostInfo(HanguRpcManager.getLocalHost());
                 registryService.register(registryInfo);

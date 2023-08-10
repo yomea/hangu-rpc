@@ -31,6 +31,7 @@
     <module>hanggu-core</module>
     <module>hanggu-demo</module>
     <module>hanggu-demo/hanggu-provider-demo</module>
+    <module>hanggu-demo/hangu-consumer-demo</module>
   </modules>
 
   <dependencyManagement>
