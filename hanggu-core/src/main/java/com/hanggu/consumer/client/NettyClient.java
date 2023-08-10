@@ -79,12 +79,12 @@ public class NettyClient {
      * @param port
      * @return
      */
-    public Channel connect(String hostIp, int port) {
+    public Channel syncConnect(String hostIp, int port) throws InterruptedException {
         Channel channel = this.bootstrap.connect(hostIp, port).addListener(future -> {
             if (!future.isSuccess()) {
                 log.error("连接 {}:{} 失败！", hostIp, port);
             }
-        }).channel();
+        }).sync().channel();
 
         return channel;
     }

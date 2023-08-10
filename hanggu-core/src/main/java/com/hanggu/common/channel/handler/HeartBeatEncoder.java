@@ -7,6 +7,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 心跳编码器
@@ -14,6 +15,7 @@ import io.netty.channel.ChannelPromise;
  * @author wuzhenhong
  * @date 2023/8/2 9:44
  */
+@Slf4j
 public class HeartBeatEncoder extends ChannelDuplexHandler {
 
     @Override
@@ -28,7 +30,7 @@ public class HeartBeatEncoder extends ChannelDuplexHandler {
         // 魔数 2bytes
         byteBuf.writeShort(HangguCons.MAGIC);
         // 请求类型，序列化方式 1bytes
-        byte finalMsgType = (byte) (MsgTypeMarkEnum.REQUEST_FLAG.getMark() & 0);
+        byte finalMsgType = MsgTypeMarkEnum.HEART_FLAG.getMark();
         byte serializationType = pingPong.getSerializationType();
         finalMsgType |= serializationType;
         // 消息类型 1byte
@@ -37,6 +39,10 @@ public class HeartBeatEncoder extends ChannelDuplexHandler {
         byteBuf.writeLong(pingPong.getId());
         byteBuf.writeInt(0);
 
-        ctx.writeAndFlush(pingPong);
+        ctx.writeAndFlush(byteBuf).addListener(future -> {
+            if(!future.isSuccess()) {
+                log.error("发送心跳失败！。。。。。。。。。。。。。。。。。。。", future.getNow());
+            }
+        });
     }
 }

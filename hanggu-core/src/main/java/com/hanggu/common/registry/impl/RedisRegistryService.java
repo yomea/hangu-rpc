@@ -203,7 +203,7 @@ public class RedisRegistryService implements RegistryService {
                 return;
             }
             List<HostInfo> hostInfoList = hostMap.keySet().stream().map(str -> {
-                String[] arr = str.split(",");
+                String[] arr = str.split(":");
                 String host = arr[0];
                 Integer port = Integer.parseInt(arr[1]);
                 HostInfo hostInfo = new HostInfo();
