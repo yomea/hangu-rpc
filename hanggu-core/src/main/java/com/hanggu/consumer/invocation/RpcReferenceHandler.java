@@ -114,13 +114,13 @@ public class RpcReferenceHandler implements InvocationHandler {
             callbacks = Collections.singletonList(methodInfo.getCallback());
         }
         RpcRequestPromise<RpcResult> future = new RpcRequestPromise<>(callbacks, channel.eventLoop());
-        
+        RpcRequestManager.putFuture(request.getId(), future);
         channel.writeAndFlush(request).addListener(wFuture -> {
             // 消息发送成功之后，保存请求
             if (wFuture.isSuccess()) {
-                RpcRequestManager.putFuture(request.getId(), future);
+                log.error("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx发送请求成功！");
             } else {
-                log.error("发送请求失败！");
+                log.error("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx发送请求失败！");
                 throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "发送请求异常！");
             }
         });
