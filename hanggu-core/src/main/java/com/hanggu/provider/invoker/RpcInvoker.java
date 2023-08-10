@@ -52,7 +52,7 @@ public class RpcInvoker {
                 ErrorCodeEnum.FORBID.getCode(), e.getClass(), e);
         }
 
-        ctx.writeAndFlush(response);
+        ctx.channel().writeAndFlush(response);
     }
 
     public Object getService() {
