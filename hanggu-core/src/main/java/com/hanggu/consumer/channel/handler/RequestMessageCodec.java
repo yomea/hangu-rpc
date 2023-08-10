@@ -51,6 +51,8 @@ public class RequestMessageCodec extends MessageToMessageCodec<ByteBuf, Request>
             serialOutput.writeString(groupName);
             String interfaceName = invokerContext.getInterfaceName();
             serialOutput.writeString(interfaceName);
+            String methodName = invokerContext.getMethodName();
+            serialOutput.writeString(methodName);
             String version = invokerContext.getVersion();
             serialOutput.writeString(version);
             List<ParameterInfo> parameterInfos = Optional.ofNullable(invokerContext.getParameterInfos())
