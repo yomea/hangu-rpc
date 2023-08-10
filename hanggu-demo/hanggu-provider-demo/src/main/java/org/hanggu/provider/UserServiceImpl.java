@@ -2,6 +2,7 @@ package org.hanggu.provider;
 
 import com.hanggu.consumer.callback.RpcResponseCallback;
 import com.hanggu.provider.annotation.HangguService;
+import java.util.List;
 import org.hanggu.consumer.UserService;
 import org.hanggu.entity.Address;
 import org.hanggu.entity.UserInfo;
@@ -46,5 +47,15 @@ public class UserServiceImpl implements UserService {
         userInfo.setName(name);
         userInfo.setAge(age);
         return userInfo;
+    }
+
+    @Override
+    public UserInfo getUserInfo(UserInfo userInfo) {
+        return userInfo;
+    }
+
+    @Override
+    public List<UserInfo> getUserInfos(List<UserInfo> userInfos) {
+        return userInfos;
     }
 }
