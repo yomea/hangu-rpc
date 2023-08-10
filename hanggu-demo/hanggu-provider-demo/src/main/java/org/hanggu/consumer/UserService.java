@@ -1,6 +1,9 @@
 package org.hanggu.consumer;
 
+import com.hanggu.consumer.annotation.HanguMethod;
 import com.hanggu.consumer.callback.RpcResponseCallback;
+import org.hanggu.entity.Address;
+import org.hanggu.entity.UserInfo;
 
 /**
  * @author wuzhenhong
@@ -8,6 +11,9 @@ import com.hanggu.consumer.callback.RpcResponseCallback;
  */
 public interface UserService {
 
-    String getName();
+    UserInfo getUserInfo();
+    String getUserInfo(String name);
 
+    Address getUserAddrss(String city, String area);
+    UserInfo getUserInfo(String name, int age);
 }

@@ -1,7 +1,11 @@
 package org.hanggu.consumer;
 
 import com.hanggu.consumer.annotation.HangguReference;
+import com.hanggu.consumer.annotation.HanguMethod;
 import com.hanggu.consumer.callback.RpcResponseCallback;
+import org.hanggu.callback.SimpleRpcResponseCallback;
+import org.hanggu.entity.Address;
+import org.hanggu.entity.UserInfo;
 
 /**
  * @author wuzhenhong
@@ -10,6 +14,10 @@ import com.hanggu.consumer.callback.RpcResponseCallback;
 @HangguReference
 public interface UserService {
 
-    String getName();
+    @HanguMethod(timeout = 20, callback = SimpleRpcResponseCallback.class)
+    UserInfo getUserInfo(RpcResponseCallback callback);
+    String getUserInfo(String name);
 
+    Address getUserAddrss(String city, String area);
+    UserInfo getUserInfo(String name, int age);
 }

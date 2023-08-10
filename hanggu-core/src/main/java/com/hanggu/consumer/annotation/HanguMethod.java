@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  * @date 2023/8/3 16:05
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Documented
 public @interface HanguMethod {
 
@@ -23,5 +23,5 @@ public @interface HanguMethod {
      */
     int timeout() default 5;
 
-    Class<RpcResponseCallback> callback();
+    Class<? extends RpcResponseCallback> callback();
 }
