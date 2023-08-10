@@ -84,11 +84,11 @@ public class ResponseMessageCodec extends MessageToMessageCodec<ByteBuf, Respons
         byte serialType = (byte) (HangguCons.SERIALIZATION_MARK & msgType);
         try {
             // 表示是来自客户端的请求
-            if (requstFlag == 1) {
+            if (requstFlag != 0) {
                 Request request = this.dealRequest(id, byteBuf, serialType);
                 list.add(request);
                 // 心跳
-            } else if ((MsgTypeMarkEnum.HEART_FLAG.getMark() & msgType) == 1) {
+            } else if ((MsgTypeMarkEnum.HEART_FLAG.getMark() & msgType) != 0) {
 
                 PingPong pingPong = this.dealHeart(id, serialType);
                 list.add(pingPong);
