@@ -57,7 +57,7 @@ public final class DescClassUtils {
         }
 
         if (c.isPrimitive()) {
-            ret.append(PRIMITIVE_MAP_DESC.get(c.getClass()));
+            ret.append(PRIMITIVE_MAP_DESC.get(c));
         } else {
             ret.append('L');
             ret.append(c.getName().replace('.', '/'));

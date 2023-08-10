@@ -118,7 +118,7 @@ public class RpcReferenceHandler implements InvocationHandler {
         channel.writeAndFlush(request).addListener(wFuture -> {
             // 消息发送成功之后，保存请求
             if (wFuture.isSuccess()) {
-                log.error("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx发送请求成功！");
+                log.info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx发送请求成功！");
             } else {
                 log.error("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx发送请求失败！");
                 throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "发送请求异常！");

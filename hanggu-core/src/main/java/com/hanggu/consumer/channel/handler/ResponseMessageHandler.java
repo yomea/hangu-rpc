@@ -45,12 +45,12 @@ public class ResponseMessageHandler extends SimpleChannelInboundHandler<Response
         rpcResult.setReturnType(rpcResponseTransport.getType());
         rpcResult.setResult(rpcResponseTransport.getVale());
 
+        if(!future.trySuccess(rpcResult)) {
+            return;
+        }
+
         List<RpcResponseCallback> callbacks = future.getCallbacks();
-        if (CollectionUtils.isEmpty(callbacks)) {
-            if(!future.trySuccess(rpcResult)) {
-                return;
-            }
-        } else {
+        if (!CollectionUtils.isEmpty(callbacks)) {
             executor.execute(() -> {
                 callbacks.stream().forEach(callback -> {
                     callback.callback(rpcResult);

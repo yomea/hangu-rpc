@@ -1,5 +1,6 @@
 package org.hanggu.entity;
 
+import java.io.Serializable;
 import lombok.Data;
 
 /**
@@ -7,7 +8,7 @@ import lombok.Data;
  * @date 2023/8/10 14:38
  */
 @Data
-public class Address {
+public class Address implements Serializable {
 
     private String province;
 

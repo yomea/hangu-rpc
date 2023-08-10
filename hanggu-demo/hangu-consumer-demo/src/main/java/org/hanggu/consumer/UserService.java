@@ -3,6 +3,7 @@ package org.hanggu.consumer;
 import com.hanggu.consumer.annotation.HangguReference;
 import com.hanggu.consumer.annotation.HanguMethod;
 import com.hanggu.consumer.callback.RpcResponseCallback;
+import java.util.List;
 import org.hanggu.callback.SimpleRpcResponseCallback;
 import org.hanggu.entity.Address;
 import org.hanggu.entity.UserInfo;
@@ -20,4 +21,8 @@ public interface UserService {
 
     Address getUserAddrss(String city, String area);
     UserInfo getUserInfo(String name, int age);
+
+    UserInfo getUserInfo(UserInfo userInfo);
+
+    List<UserInfo> getUserInfos(List<UserInfo> userInfos);
 }

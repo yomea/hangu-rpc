@@ -2,12 +2,15 @@ package org.hanggu.controller;
 
 import com.hanggu.common.entity.RpcResult;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.hanggu.consumer.UserService;
 import org.hanggu.entity.Address;
 import org.hanggu.entity.UserInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,5 +47,15 @@ public class UserController {
     @GetMapping("/d")
     public UserInfo d() {
         return userService.getUserInfo("小风", 18);
+    }
+
+    @PostMapping("/e")
+    public UserInfo e(@RequestBody UserInfo userInfo) {
+        return userService.getUserInfo(userInfo);
+    }
+
+    @PostMapping("/f")
+    public List<UserInfo> f(@RequestBody List<UserInfo> userInfos) {
+        return userService.getUserInfos(userInfos);
     }
 }
