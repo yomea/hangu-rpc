@@ -96,18 +96,18 @@ public class ResponseMessageCodec extends MessageToMessageCodec<ByteBuf, Respons
             }
         } catch (RpcInvokerException e) {
             Response response = CommonUtils.createResponseInfo(id, serialType, e.getCode(), e.getClass(), e);
-            ctx.writeAndFlush(response);
+            ctx.channel().writeAndFlush(response);
             throw e;
         } catch (IOException e) {
             RpcInvokerException cause = new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "反序列化失败！", e);
             Response response = CommonUtils.createResponseInfo(id, serialType, cause.getCode(), cause.getClass(),
                 cause);
-            ctx.writeAndFlush(response);
+            ctx.channel().writeAndFlush(response);
             throw e;
         } catch (Exception e) {
             Response response = CommonUtils.createResponseInfo(id, serialType, ErrorCodeEnum.FAILURE.getCode(),
                 e.getClass(), e);
-            ctx.writeAndFlush(response);
+            ctx.channel().writeAndFlush(response);
             throw e;
         }
     }
