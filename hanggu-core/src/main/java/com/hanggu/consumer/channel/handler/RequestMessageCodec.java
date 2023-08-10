@@ -63,8 +63,8 @@ public class RequestMessageCodec extends MessageToMessageCodec<ByteBuf, Request>
             parameterInfos.stream().forEach(e -> {
                 try {
                     serialOutput.writeObject(e.getValue());
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
+                } catch (Throwable ex) {
+                    throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "序列化失败！", ex);
                 }
             });
             serialOutput.flush();

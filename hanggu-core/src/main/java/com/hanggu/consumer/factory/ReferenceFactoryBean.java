@@ -133,7 +133,7 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
                             this.msgPrefix(method) + "超时时间必须是大于零数字！");
                     }
 
-                    Class<RpcResponseCallback> callbackClass = hanguMethod.callback();
+                    Class<? extends RpcResponseCallback> callbackClass = hanguMethod.callback();
                     if (!ClassUtils.hasConstructor(callbackClass)) {
                         throw new RpcParseException(ErrorCodeEnum.FAILURE.getCode(),
                             this.msgPrefix(method) + "回调函数没有默认构造器！");
