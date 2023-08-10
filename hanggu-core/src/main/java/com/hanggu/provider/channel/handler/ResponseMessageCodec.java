@@ -42,7 +42,7 @@ public class ResponseMessageCodec extends MessageToMessageCodec<ByteBuf, Respons
         // 魔数 2bytes
         byteBuf.writeShort(HangguCons.MAGIC);
         // 请求类型，序列化方式 1bytes
-        byte finalMsgType = (byte) (MsgTypeMarkEnum.REQUEST_FLAG.getMark() & 0);
+        byte finalMsgType = MsgTypeMarkEnum.REQUEST_FLAG.getMark();
         byte serializationType = response.getSerializationType();
         finalMsgType |= serializationType;
         // 消息类型 1byte

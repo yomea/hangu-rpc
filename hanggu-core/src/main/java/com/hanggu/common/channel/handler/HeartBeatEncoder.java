@@ -28,7 +28,7 @@ public class HeartBeatEncoder extends ChannelDuplexHandler {
         // 魔数 2bytes
         byteBuf.writeShort(HangguCons.MAGIC);
         // 请求类型，序列化方式 1bytes
-        byte finalMsgType = (byte) (MsgTypeMarkEnum.REQUEST_FLAG.getMark() & 0);
+        byte finalMsgType = MsgTypeMarkEnum.REQUEST_FLAG.getMark();
         byte serializationType = pingPong.getSerializationType();
         finalMsgType |= serializationType;
         // 消息类型 1byte
