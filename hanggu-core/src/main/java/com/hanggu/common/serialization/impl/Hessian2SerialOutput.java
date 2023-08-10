@@ -33,4 +33,9 @@ public class Hessian2SerialOutput implements SerialOutput {
     public void writeString(String text) throws IOException {
         output.writeString(text);
     }
+
+    @Override
+    public void flush() throws IOException {
+        output.flush();
+    }
 }

@@ -65,6 +65,7 @@ public class RequestMessageCodec extends MessageToMessageCodec<ByteBuf, Request>
                     throw new RuntimeException(ex);
                 }
             });
+            serialOutput.flush();
             byte[] contentBuff = outputStream.toByteArray();
             //内容对象长度 int 4bytes
             byteBuf.writeInt(contentBuff.length);

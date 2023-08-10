@@ -13,4 +13,6 @@ public interface SerialOutput {
     void writeObject(Object obj) throws IOException;
 
     void writeString(String text) throws IOException;
+
+    void flush() throws IOException;
 }

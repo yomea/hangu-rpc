@@ -60,6 +60,7 @@ public class ResponseMessageCodec extends MessageToMessageCodec<ByteBuf, Respons
             serialOutput.writeString(typeDesc);
             Object value = rpcResponseTransport.getVale();
             serialOutput.writeObject(value);
+            serialOutput.flush();
             byte[] contentBuff = outputStream.toByteArray();
             //内容对象长度 int 4bytes
             byteBuf.writeInt(contentBuff.length);
