@@ -20,4 +20,8 @@ public class RpcRequestManager {
     public static RpcRequestPromise<RpcResult> getFuture(Long id) {
         return FUTURE_MAP.get(id);
     }
+
+    public static RpcRequestPromise<RpcResult> removeFuture(Long id) {
+        return FUTURE_MAP.remove(id);
+    }
 }

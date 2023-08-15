@@ -33,7 +33,7 @@ public class ResponseMessageHandler extends SimpleChannelInboundHandler<Response
     protected void channelRead0(ChannelHandlerContext ctx, Response response) throws Exception {
 
         Long id = response.getId();
-        RpcRequestPromise<RpcResult> future = RpcRequestManager.getFuture(id);
+        RpcRequestPromise<RpcResult> future = RpcRequestManager.removeFuture(id);
         if (Objects.isNull(future) || future.isCancelled()) {
             log.warn("无效的响应请求！id = {}", id);
             return;
