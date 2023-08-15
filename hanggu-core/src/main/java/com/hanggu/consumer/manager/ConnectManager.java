@@ -4,6 +4,8 @@ import com.hanggu.common.entity.HostInfo;
 import com.hanggu.common.entity.RegistryInfo;
 import com.hanggu.common.entity.RegistryNotifyInfo;
 import com.hanggu.common.entity.ServerInfo;
+import com.hanggu.common.enums.ErrorCodeEnum;
+import com.hanggu.common.exception.RpcInvokerException;
 import com.hanggu.common.manager.HanguRpcManager;
 import com.hanggu.common.registry.RegistryService;
 import com.hanggu.common.util.CommonUtils;
@@ -11,6 +13,7 @@ import com.hanggu.consumer.client.ClientConnect;
 import com.hanggu.consumer.client.NettyClient;
 import com.hanggu.consumer.listener.RegistryNotifyListener;
 import io.netty.channel.Channel;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,6 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
@@ -30,9 +34,10 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 public class ConnectManager implements RegistryNotifyListener {
 
-    private final Map<String, List<ClientConnect>> KEY_CHANNELS = new ConcurrentHashMap<>(8192);
+    private static final Map<String, ClientConnect> GLOBAL_HOST_INFO_CHANNEL = new ConcurrentHashMap<>();
+
+    private List<ClientConnect> KEY_CHANNELS = new ArrayList<>();
     private final Map<String, Object> KEY_LOCK = new ConcurrentHashMap<>(8192);
-    private static final Object OBJECT = new Object();
 
     private ServerInfo serverInfo;
 
@@ -50,60 +55,65 @@ public class ConnectManager implements RegistryNotifyListener {
     @Override
     public void registryNotify(RegistryNotifyInfo notifyInfo) {
         // 刷新本地服务列表
-        String key = CommonUtils.createServiceKey(notifyInfo.getServerInfo());
-        this.cacheConnects(key, notifyInfo.getHostInfos());
+        this.cacheConnect(notifyInfo.getHostInfos());
 
     }
 
+    private void cacheConnect(List<HostInfo> hostInfoList) {
+        hostInfoList.stream().forEach(this::doCacheConnect);
+    }
 
-    private void cacheConnects(String key, List<HostInfo> hostInfoList) {
-        if (CollectionUtils.isEmpty(hostInfoList)) {
+    private boolean hitCache(String key) {
+
+        ClientConnect clientConnect = GLOBAL_HOST_INFO_CHANNEL.get(key);
+        if (Objects.nonNull(clientConnect)) {
+            Channel channel = clientConnect.getChannel();
+            if(channel.isActive()) {
+                KEY_CHANNELS.add(clientConnect);
+                return true;
+            } else {
+                GLOBAL_HOST_INFO_CHANNEL.remove(key);
+            }
+        }
+        return false;
+    }
+
+    private void doCacheConnect(HostInfo hostInfo) {
+        // 共享连接（netty的write方法做了线程安全处理，对于外部线程提交的数据，会包装成task加入到队列中，使用netty线程写出）
+        String key = hostInfo.getHost() + ":" + hostInfo.getPort();
+        if(this.hitCache(key)) {
             return;
         }
-        // 防御性操作，正常情况下没有并发操作（每隔接口会单独维护自己的服务列表）
-        while (Objects.nonNull(KEY_LOCK.putIfAbsent(key, OBJECT))) {
-            // 自旋
-            Thread.yield();
-        }
+        KEY_LOCK.putIfAbsent(key, new Object());
         try {
-            List<ClientConnect> connectList = KEY_CHANNELS.getOrDefault(key, new ArrayList<>());
-            // 获取有效的链接
-            Set<HostInfo> hostInfoSet = connectList.stream().filter(con -> con.getChannel().isActive())
-                .map(ClientConnect::getHostInfo).collect(Collectors.toSet());
-            hostInfoList = hostInfoList.stream().filter(hostInfo -> !hostInfoSet.contains(hostInfo))
-                .collect(Collectors.toList());
-            NettyClient nettyClient = HanguRpcManager.getNettyClient();
-            List<ClientConnect> clients = hostInfoList.stream().map(hostInfo -> {
-                // 注意，这样直接链接的是异步的，获取链接的时候还是需要检查是否链接成功，方可使用
-                Channel channel = null;
+            synchronized (KEY_LOCK.get(key)) {
+                if(this.hitCache(key)) {
+                    return;
+                }
+
+                NettyClient nettyClient = HanguRpcManager.getNettyClient();
+                Channel channel;
                 try {
                     channel = nettyClient.syncConnect(hostInfo.getHost(), hostInfo.getPort());
                 } catch (InterruptedException e) {
                     log.error("连接失败，跳过");
+                    throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "连接失败，跳过", e);
                 }
                 ClientConnect client = new ClientConnect();
                 client.setChannel(channel);
                 client.setHostInfo(hostInfo);
-                return client;
-            }).collect(Collectors.toList());
-
-            if (CollectionUtils.isEmpty(clients)) {
-                return;
+                KEY_CHANNELS.add(client);
+                GLOBAL_HOST_INFO_CHANNEL.put(key, client);
             }
-
-            connectList.addAll(clients);
-
-            KEY_CHANNELS.put(key, connectList);
         } finally {
             KEY_LOCK.remove(key);
         }
     }
 
-    public List<ClientConnect> getConnects(String key) {
-        List<ClientConnect> connects = KEY_CHANNELS.getOrDefault(key, Collections.emptyList());
-        return connects.stream()
-            .filter(connect -> Objects.nonNull(connect.getChannel()) && connect.getChannel().isActive())
-            .collect(Collectors.toList());
+    public List<ClientConnect> getConnects() {
+        return KEY_CHANNELS.stream()
+                .filter(connect -> Objects.nonNull(connect.getChannel()) && connect.getChannel().isActive())
+                .collect(Collectors.toList());
     }
 
     private void subscribe(ServerInfo serverInfo) {
@@ -112,8 +122,6 @@ public class ConnectManager implements RegistryNotifyListener {
 
     private void initPullService() {
         List<HostInfo> infos = registryService.pullServers(serverInfo);
-        String key = CommonUtils.createServiceKey(serverInfo.getGroupName(), serverInfo.getInterfaceName(),
-            serverInfo.getVersion());
-        this.cacheConnects(key, infos);
+        this.cacheConnect(infos);
     }
 }

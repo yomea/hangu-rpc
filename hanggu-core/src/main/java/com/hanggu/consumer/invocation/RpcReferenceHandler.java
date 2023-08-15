@@ -59,8 +59,7 @@ public class RpcReferenceHandler implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-        String key = CommonUtils.createServiceKey(this.serverInfo);
-        List<ClientConnect> connects = this.connectManager.getConnects(key);
+        List<ClientConnect> connects = this.connectManager.getConnects();
         if (CollectionUtils.isEmpty(connects)) {
             throw new ServiceNotFoundException(
                 String.format("未找到 groupName = %s, interfaceName = %s, version = %s的有效服务连接地址", this.serverInfo.getGroupName(),
