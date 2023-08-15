@@ -104,4 +104,18 @@
     </dependencies>
   </dependencyManagement>
 
+  <!-- 解决 spring-boot jar 包下载问题 -->
+  <repositories>
+    <repository>
+      <id>spring-snapshots</id>
+      <url>https://repo.spring.io/libs-snapshot</url>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>spring-snapshots</id>
+      <url>https://repo.spring.io/libs-snapshot</url>
+    </pluginRepository>
+  </pluginRepositories>
+
 </project>
