@@ -1,6 +1,5 @@
 package org.hanggu.provider;
 
-import com.hanggu.consumer.callback.RpcResponseCallback;
 import com.hanggu.provider.annotation.HangguService;
 import java.util.List;
 import org.hanggu.consumer.UserService;

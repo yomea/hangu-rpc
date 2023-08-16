@@ -126,7 +126,8 @@ public class ResponseMessageCodec extends MessageToMessageCodec<ByteBuf, Respons
         String methodName = serialInput.readString();
         String version = serialInput.readString();
         String parameters = serialInput.readString();
-        List<String> parameterTypeList = Arrays.stream(parameters.split(",")).filter(StringUtils::hasText).collect(Collectors.toList());
+        List<String> parameterTypeList = Arrays.stream(parameters.split(",")).filter(StringUtils::hasText)
+            .collect(Collectors.toList());
         List<ParameterInfo> parameterInfos = parameterTypeList.stream().map(desc -> {
             try {
                 Class<?> clss = DescClassUtils.desc2class(desc);

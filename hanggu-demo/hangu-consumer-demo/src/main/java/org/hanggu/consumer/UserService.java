@@ -17,9 +17,11 @@ public interface UserService {
 
     @HanguMethod(timeout = 20, callback = SimpleRpcResponseCallback.class)
     UserInfo getUserInfo(RpcResponseCallback callback);
+
     String getUserInfo(String name);
 
     Address getUserAddrss(String city, String area);
+
     UserInfo getUserInfo(String name, int age);
 
     UserInfo getUserInfo(UserInfo userInfo);

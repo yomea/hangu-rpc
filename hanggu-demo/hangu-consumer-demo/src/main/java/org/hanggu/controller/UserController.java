@@ -1,9 +1,6 @@
 package org.hanggu.controller;
 
-import com.hanggu.common.entity.RpcResult;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.hanggu.consumer.UserService;
 import org.hanggu.entity.Address;
 import org.hanggu.entity.UserInfo;

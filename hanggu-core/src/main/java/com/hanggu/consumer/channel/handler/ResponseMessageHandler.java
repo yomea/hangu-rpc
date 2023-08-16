@@ -45,7 +45,7 @@ public class ResponseMessageHandler extends SimpleChannelInboundHandler<Response
         rpcResult.setReturnType(rpcResponseTransport.getType());
         rpcResult.setResult(rpcResponseTransport.getVale());
 
-        if(!future.trySuccess(rpcResult)) {
+        if (!future.trySuccess(rpcResult)) {
             return;
         }
 

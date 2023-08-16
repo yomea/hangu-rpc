@@ -62,7 +62,8 @@ public class RpcReferenceHandler implements InvocationHandler {
         List<ClientConnect> connects = this.connectManager.getConnects();
         if (CollectionUtils.isEmpty(connects)) {
             throw new ServiceNotFoundException(
-                String.format("未找到 groupName = %s, interfaceName = %s, version = %s的有效服务连接地址", this.serverInfo.getGroupName(),
+                String.format("未找到 groupName = %s, interfaceName = %s, version = %s的有效服务连接地址",
+                    this.serverInfo.getGroupName(),
                     this.serverInfo.getInterfaceName(), this.serverInfo.getVersion()));
         }
         // TODO: 2023/8/2 负载均衡，先随便来个随机
@@ -128,11 +129,11 @@ public class RpcReferenceHandler implements InvocationHandler {
 
         if (!MethodCallTypeEnum.SYNC.getType().equals(callType)) {
             HanguRpcManager.getSchedule().schedule(() -> {
-                if(future.isSuccess()) {
+                if (future.isSuccess()) {
                     return;
                 }
                 // 取消
-                if(!future.cancel(false)) {
+                if (!future.cancel(false)) {
                     return;
                 }
                 List<RpcResponseCallback> callbackList = Optional.ofNullable(future.getCallbacks())
@@ -159,11 +160,11 @@ public class RpcReferenceHandler implements InvocationHandler {
 
     private Integer getTimeout(MethodInfo methodInfo) {
         Integer timeout = HanguContext.getValue(HanguContext.DYNAMIC_TIME_OUT);
-        if(Objects.nonNull(timeout) && timeout > 0) {
+        if (Objects.nonNull(timeout) && timeout > 0) {
             return timeout;
         }
         timeout = methodInfo.getTimeout();
-        if(Objects.nonNull(timeout) && timeout > 0) {
+        if (Objects.nonNull(timeout) && timeout > 0) {
             return timeout;
         }
         return 5;
@@ -175,7 +176,7 @@ public class RpcReferenceHandler implements InvocationHandler {
             Class<?> returnType = rpcResult.getReturnType();
             if (Throwable.class.isAssignableFrom(returnType)) {
                 Throwable e = (Throwable) rpcResult.getResult();
-                if(e instanceof RpcInvokerException) {
+                if (e instanceof RpcInvokerException) {
                     // TODO: 2023/8/7 如果不是业务调用失败产生的错误，那么故障转移或者快速失败
                 } else {
                     throw e;

@@ -41,7 +41,7 @@ public class HeartBeatEncoder extends ChannelDuplexHandler {
         byteBuf.writeInt(0);
 
         ctx.writeAndFlush(byteBuf).addListener(future -> {
-            if(!future.isSuccess()) {
+            if (!future.isSuccess()) {
                 log.error("发送心跳失败！。。。。。。。。。。。。。。。。。。。", future.getNow());
             }
         });

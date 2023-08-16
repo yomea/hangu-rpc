@@ -4,7 +4,7 @@ package com.hanggu.common.exception;
  * @author wuzhenhong
  * @date 2023/8/9 11:18
  */
-public class RpcInvokerTimeoutException extends RpcInvokerException{
+public class RpcInvokerTimeoutException extends RpcInvokerException {
 
     public RpcInvokerTimeoutException(int code, String msg) {
         super(code, msg);

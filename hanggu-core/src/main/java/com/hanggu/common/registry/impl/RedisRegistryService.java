@@ -12,7 +12,6 @@ import com.hanggu.common.enums.ErrorCodeEnum;
 import com.hanggu.common.exception.RpcInvokerException;
 import com.hanggu.common.registry.RegistryService;
 import com.hanggu.consumer.listener.RegistryNotifyListener;
-import com.hanggu.consumer.manager.ConnectManager;
 import com.hanggu.provider.RegistryConstants;
 import java.util.Collections;
 import java.util.List;
@@ -159,7 +158,7 @@ public class RedisRegistryService implements RegistryService {
             registryInfoList.stream().forEach(registryInfo -> {
                 String key = this.createKey(registryInfo);
                 String value = registryInfo.getHostInfo().toString();
-                // 一分钟过期
+                // 12秒过期
                 String expire = String.valueOf(System.currentTimeMillis() + EXPIRE_TIME);
                 try {
                     jedis.hset(key, value, expire);
@@ -199,7 +198,7 @@ public class RedisRegistryService implements RegistryService {
             } finally {
                 jedis.close();
             }
-            if(Objects.isNull(hostMap) || hostMap.isEmpty()) {
+            if (Objects.isNull(hostMap) || hostMap.isEmpty()) {
                 return;
             }
             List<HostInfo> hostInfoList = hostMap.keySet().stream().map(str -> {
