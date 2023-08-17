@@ -4,6 +4,7 @@ import com.hangu.common.entity.RegistryInfo;
 import com.hangu.common.registry.RegistryService;
 import com.hangu.common.manager.HanguRpcManager;
 import com.hangu.common.properties.HanguProperties;
+import com.hangu.common.util.CommonUtils;
 import com.hangu.provider.annotation.HanguService;
 import com.hangu.provider.invoker.RpcInvoker;
 import com.hangu.provider.manager.LocalServiceManager;
@@ -58,11 +59,10 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
                 interfaceNameList.add(interfaceName);
             }
             String version = hanguService.version();
-            String prefixKey = groupName + "/" + version;
             RpcInvoker rpcInvoker = new RpcInvoker();
             rpcInvoker.setService(service);
             interfaceNameList.stream().forEach(intName -> {
-                String key = prefixKey + "/" + intName;
+                String key = CommonUtils.createServiceKey(groupName, intName, version);
                 // export service
                 // step 1.0 本地暴露
                 LocalServiceManager.register(key, rpcInvoker);

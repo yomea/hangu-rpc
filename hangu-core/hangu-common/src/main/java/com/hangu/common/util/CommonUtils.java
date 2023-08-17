@@ -5,12 +5,16 @@ import com.hangu.common.entity.Response;
 import com.hangu.common.entity.RpcResponseTransport;
 import com.hangu.common.entity.ServerInfo;
 import java.lang.reflect.Constructor;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author wuzhenhong
  * @date 2023/8/1 14:16
  */
 public final class CommonUtils {
+
+    private static final String EMPTY_GROUP = "HANGU_EMPTY_GROUP";
+    private static final String EMPTY_VERSION = "HANGU_EMPTY_VERSION";
 
     private CommonUtils() {
         throw new RuntimeException("不允许实例化！");
@@ -23,12 +27,13 @@ public final class CommonUtils {
 
     public static String createServiceKey(String groupName, String interfaceName, String version) {
 
-        return groupName + "/" + version + "/" + interfaceName;
+        return (StringUtils.isBlank(groupName) ? EMPTY_GROUP : groupName) + "/" + (StringUtils.isBlank(version) ? EMPTY_VERSION : version) + "/"
+            + StringUtils.trimToEmpty(interfaceName);
     }
 
     public static String createServiceKey(ServerInfo serverInfo) {
 
-        return serverInfo.getGroupName() + "/" + serverInfo.getVersion() + "/" + serverInfo.getInterfaceName();
+        return createServiceKey(serverInfo.getGroupName(), serverInfo.getInterfaceName(), serverInfo.getVersion());
     }
 
     public static Response createResponseInfo(
@@ -69,8 +74,7 @@ public final class CommonUtils {
     public static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?>... paramTypes) {
         try {
             return clazz.getConstructor(paramTypes);
-        }
-        catch (NoSuchMethodException ex) {
+        } catch (NoSuchMethodException ex) {
             return null;
         }
     }

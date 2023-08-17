@@ -1,11 +1,13 @@
 package com.hangu.common.configuration;
 
 import com.hangu.common.manager.HanguRpcManager;
+import com.hangu.common.properties.HanguProperties;
 import com.hangu.common.properties.JedisConfigPropertis;
+import com.hangu.common.properties.ZookeeperConfigProperties;
 import com.hangu.common.registry.RegistryService;
 import com.hangu.common.registry.impl.RedisRegistryService;
+import com.hangu.common.registry.impl.ZookeeperRegistryService;
 import com.hangu.consumer.configuration.ConsumerConfiguration;
-import com.hangu.common.properties.HanguProperties;
 import com.hangu.provider.configuration.ProviderConfiguration;
 import java.util.Collections;
 import java.util.HashSet;
@@ -84,6 +86,19 @@ public class HanguAutoConfiguration {
     @Configuration(proxyBeanMethods = false)
     public class ZookeeperRegistryConfiguration {
 
+        @Bean
+        @ConditionalOnMissingBean(ZookeeperConfigProperties.class)
+        @ConfigurationProperties(prefix = "hangu.rpc.registry.zookeeper")
+        public ZookeeperConfigProperties zookeeperConfigProperties() {
+            ZookeeperConfigProperties properties = new ZookeeperConfigProperties();
+            return properties;
+        }
+
+        @Bean
+        @ConditionalOnMissingBean(RegistryService.class)
+        public RegistryService zookeeperRegistryService(ZookeeperConfigProperties zookeeperConfigProperties) {
+            return new ZookeeperRegistryService(zookeeperConfigProperties);
+        }
 
     }
 }

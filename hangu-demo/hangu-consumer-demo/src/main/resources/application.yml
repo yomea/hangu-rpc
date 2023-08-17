@@ -5,7 +5,7 @@ hangu:
     provider:
       port: 8089
     registry:
-      protocol: redis
+      protocol: zookeeper
       redis:
         nodes: xxx
         master: xxx
