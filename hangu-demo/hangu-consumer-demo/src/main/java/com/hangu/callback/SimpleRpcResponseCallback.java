@@ -1,4 +1,4 @@
-package org.hangu.callback;
+package com.hangu.callback;
 
 import cn.hutool.json.JSONUtil;
 import com.hangu.common.entity.RpcResult;

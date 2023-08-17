@@ -1,4 +1,4 @@
-package org.hangu.entity;
+package com.hangu.entity;
 
 import java.io.Serializable;
 import lombok.Data;

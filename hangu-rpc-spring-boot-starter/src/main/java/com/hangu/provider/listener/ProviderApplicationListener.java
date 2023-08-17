@@ -4,7 +4,7 @@ import com.hangu.common.entity.RegistryInfo;
 import com.hangu.common.registry.RegistryService;
 import com.hangu.common.manager.HanguRpcManager;
 import com.hangu.common.properties.HanguProperties;
-import com.hangu.provider.annotation.hanguService;
+import com.hangu.provider.annotation.HanguService;
 import com.hangu.provider.invoker.RpcInvoker;
 import com.hangu.provider.manager.LocalServiceManager;
 import java.util.ArrayList;
@@ -34,14 +34,14 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
 
         ApplicationContext applicationContext = event.getApplicationContext();
 
-        Map<String, Object> beanNameMapServiceMap = applicationContext.getBeansWithAnnotation(hanguService.class);
+        Map<String, Object> beanNameMapServiceMap = applicationContext.getBeansWithAnnotation(HanguService.class);
         if (CollectionUtils.isEmpty(beanNameMapServiceMap)) {
             return;
         }
         RegistryService registryService = applicationContext.getBean(RegistryService.class);
         HanguRpcManager.openServer(hanguProperties);
         beanNameMapServiceMap.forEach((beanName, service) -> {
-            hanguService hanguService = AnnotationUtils.getAnnotation(service.getClass(), hanguService.class);
+            HanguService hanguService = AnnotationUtils.getAnnotation(service.getClass(), HanguService.class);
             String groupName = hanguService.groupName();
             String interfaceName = hanguService.interfaceName();
             List<String> interfaceNameList = new ArrayList<>();

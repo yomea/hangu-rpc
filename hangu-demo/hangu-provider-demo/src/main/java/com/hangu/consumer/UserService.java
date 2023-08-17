@@ -1,8 +1,8 @@
-package org.hangu.consumer;
+package com.hangu.consumer;
 
+import com.hangu.entity.Address;
+import com.hangu.entity.UserInfo;
 import java.util.List;
-import org.hangu.entity.Address;
-import org.hangu.entity.UserInfo;
 
 /**
  * @author wuzhenhong

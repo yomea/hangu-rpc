@@ -62,7 +62,7 @@ public class RpcReferenceHandler implements InvocationHandler {
         List<ClientConnect> connects = this.connectManager.getConnects();
         if (CollectionUtil.isEmpty(connects)) {
             throw new ServiceNotFoundException(
-                String.format("未找到 groupName = %s, interfaceName = %s, version = %s的有效服务连接地址",
+                String.format("未找到 groupName = %s, interfaceName = %s, version = %s的有效服务连接地址，请检查是否启动服务提供者！",
                     this.serverInfo.getGroupName(),
                     this.serverInfo.getInterfaceName(), this.serverInfo.getVersion()));
         }

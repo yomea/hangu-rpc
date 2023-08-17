@@ -1,6 +1,5 @@
-package org.hangu;
+package com.hangu;
 
-import com.hangu.consumer.annotation.ReferenceScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -9,10 +8,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 
 @SpringBootApplication
-@ReferenceScan
-public class ConsumerBootstrap {
+public class Bootstrap {
 
     public static void main(String[] args) {
-        SpringApplication.run(ConsumerBootstrap.class, args);
+        SpringApplication.run(Bootstrap.class, args);
     }
 }

@@ -1,18 +1,18 @@
-package org.hangu.consumer;
+package com.hangu.consumer;
 
-import com.hangu.consumer.annotation.hanguReference;
-import com.hangu.consumer.annotation.HanguMethod;
+import com.hangu.callback.SimpleRpcResponseCallback;
 import com.hangu.common.callback.RpcResponseCallback;
+import com.hangu.consumer.annotation.HanguMethod;
+import com.hangu.consumer.annotation.HanguReference;
+import com.hangu.entity.Address;
+import com.hangu.entity.UserInfo;
 import java.util.List;
-import org.hangu.callback.SimpleRpcResponseCallback;
-import org.hangu.entity.Address;
-import org.hangu.entity.UserInfo;
 
 /**
  * @author wuzhenhong
  * @date 2023/8/2 13:47
  */
-@hanguReference
+@HanguReference
 public interface UserService {
 
     @HanguMethod(timeout = 20, callback = SimpleRpcResponseCallback.class)

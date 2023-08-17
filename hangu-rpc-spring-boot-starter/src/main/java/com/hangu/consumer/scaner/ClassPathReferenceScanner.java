@@ -2,7 +2,7 @@ package com.hangu.consumer.scaner;
 
 import com.hangu.common.entity.ServerInfo;
 import com.hangu.common.util.CommonUtils;
-import com.hangu.consumer.annotation.hanguReference;
+import com.hangu.consumer.annotation.HanguReference;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
@@ -41,7 +41,7 @@ public class ClassPathReferenceScanner extends ClassPathBeanDefinitionScanner {
     }
 
     public void registerFilters() {
-        AnnotationTypeFilter referenceFilter = new AnnotationTypeFilter(hanguReference.class, true, false);
+        AnnotationTypeFilter referenceFilter = new AnnotationTypeFilter(HanguReference.class, true, false);
         super.addIncludeFilter(referenceFilter);
     }
 
@@ -81,7 +81,7 @@ public class ClassPathReferenceScanner extends ClassPathBeanDefinitionScanner {
                 throw new RuntimeException(e);
             }
             // 该扫描器只扫描被 hanguReference 注解标注的服务引用接口
-            hanguReference hanguReference = AnnotationUtils.getAnnotation(clazz, hanguReference.class);
+            HanguReference hanguReference = AnnotationUtils.getAnnotation(clazz, HanguReference.class);
             // 添加构造参数
             ServerInfo serverInfo = new ServerInfo();
             serverInfo.setGroupName(hanguReference.groupName());

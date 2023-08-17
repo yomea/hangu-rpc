@@ -1,16 +1,16 @@
-package org.hangu.provider;
+package com.hangu.provider;
 
-import com.hangu.provider.annotation.hanguService;
+import com.hangu.consumer.UserService;
+import com.hangu.entity.Address;
+import com.hangu.entity.UserInfo;
+import com.hangu.provider.annotation.HanguService;
 import java.util.List;
-import org.hangu.consumer.UserService;
-import org.hangu.entity.Address;
-import org.hangu.entity.UserInfo;
 
 /**
  * @author wuzhenhong
  * @date 2023/8/4 15:21
  */
-@hanguService
+@HanguService
 public class UserServiceImpl implements UserService {
 
     @Override

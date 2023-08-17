@@ -1,4 +1,4 @@
-package org.hangu.exception;
+package com.hangu.exception;
 
 import cn.hutool.json.JSONUtil;
 import com.hangu.common.exception.RpcInvokerException;

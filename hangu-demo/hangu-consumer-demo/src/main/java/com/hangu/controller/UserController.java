@@ -1,9 +1,8 @@
-package org.hangu.controller;
+package com.hangu.controller;
 
+import com.hangu.consumer.UserService;
+import com.hangu.entity.UserInfo;
 import java.util.List;
-import org.hangu.consumer.UserService;
-import org.hangu.entity.Address;
-import org.hangu.entity.UserInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,7 +36,7 @@ public class UserController {
     }
 
     @GetMapping("/c")
-    public Address c() {
+    public com.hangu.entity.Address c() {
         return userService.getUserAddrss("赣州市", "于都县");
     }
 
