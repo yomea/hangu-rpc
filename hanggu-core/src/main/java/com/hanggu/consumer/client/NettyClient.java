@@ -66,7 +66,7 @@ public class NettyClient {
         }
     }
 
-    private void close() {
+    public void close() {
         if (nioEventLoopGroup != null) {
             nioEventLoopGroup.shutdownGracefully();
         }

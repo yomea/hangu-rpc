@@ -99,7 +99,7 @@ public class RequestMessageCodec extends MessageToMessageCodec<ByteBuf, Request>
         try {
             if ((MsgTypeMarkEnum.HEART_FLAG.getMark() & msgType) != 0) {
 
-                PingPong pingPong = this.dealHeart(id);
+                PingPong pingPong = this.dealHeart(id, serialType);
                 list.add(pingPong);
                 // 响应
             } else if (requstFlag == 0) {
@@ -150,9 +150,10 @@ public class RequestMessageCodec extends MessageToMessageCodec<ByteBuf, Request>
         return response;
     }
 
-    private PingPong dealHeart(Long id) {
+    private PingPong dealHeart(Long id, byte serialType) {
         PingPong pingPong = new PingPong();
         pingPong.setId(id);
+        pingPong.setSerializationType(serialType);
         return pingPong;
     }
 }

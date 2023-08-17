@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -23,7 +24,7 @@ import org.springframework.util.CollectionUtils;
  * @author wuzhenhong
  * @date 2023/7/31 14:24
  */
-public class ProviderApplicationListener implements ApplicationListener<ContextRefreshedEvent> {
+public class ProviderApplicationListener implements ApplicationListener<ContextRefreshedEvent>, DisposableBean {
 
     @Autowired
     private HanguProperties hanguProperties;
@@ -75,5 +76,10 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
                 registryService.register(registryInfo);
             });
         });
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        HanguRpcManager.closeServer();
     }
 }

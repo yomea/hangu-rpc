@@ -9,6 +9,7 @@ import com.hanggu.provider.server.NettyServer;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -28,7 +29,7 @@ public class HanguRpcManager {
     private static volatile NettyClient NETTY_CLIENT;
     private static volatile NettyServer NETTY_SERVER;
 
-    private static volatile Executor GLOBAL_EXECUTOR;
+    private static volatile ExecutorService GLOBAL_EXECUTOR;
     private static volatile ScheduledExecutorService SCHEDULE_EXECUTOR;
 
     private static HostInfo LOCAL_HOST;
@@ -82,7 +83,7 @@ public class HanguRpcManager {
             int maxNum = hanguProperties.getMaxNum();
             maxNum = maxNum <= 0 ? HangguCons.CPUS * 8 : maxNum;
 
-            Executor executor = new ThreadPoolExecutor(coreNum, maxNum,
+            ExecutorService executor = new ThreadPoolExecutor(coreNum, maxNum,
                 10L, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(10000));
 
@@ -124,5 +125,23 @@ public class HanguRpcManager {
 
     public static final ScheduledExecutorService getSchedule() {
         return SCHEDULE_EXECUTOR;
+    }
+
+    public static final void closeClient() {
+        if(Objects.nonNull(NETTY_CLIENT)) {
+            NETTY_CLIENT.close();
+        }
+        if(Objects.nonNull(SCHEDULE_EXECUTOR)) {
+            SCHEDULE_EXECUTOR.shutdown();
+        }
+    }
+
+    public static final void closeServer() {
+        if(Objects.nonNull(NETTY_SERVER)) {
+            NETTY_SERVER.close();
+        }
+        if(Objects.nonNull(GLOBAL_EXECUTOR)) {
+            GLOBAL_EXECUTOR.shutdown();
+        }
     }
 }

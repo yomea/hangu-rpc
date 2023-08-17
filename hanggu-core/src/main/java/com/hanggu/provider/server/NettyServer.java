@@ -97,8 +97,4 @@ public class NettyServer {
             log.warn(e.getMessage(), e);
         }
     }
-
-    public boolean isActive() {
-        return channel.isActive();
-    }
 }
