@@ -50,9 +50,8 @@ public class RedisRegistryService extends AbstractRegistryService {
     }
 
     @Override
-    public void register(RegistryInfo registryInfo) {
+    public void doRegister(RegistryInfo registryInfo) {
         this.doRegister(Collections.singletonList(registryInfo), RegistryConstants.REGISTER);
-        registered.add(registryInfo);
     }
 
     @Override
@@ -69,7 +68,7 @@ public class RedisRegistryService extends AbstractRegistryService {
     }
 
     @Override
-    public void subscribe(RegistryNotifyListener listener, ServerInfo serverInfo) {
+    public List<HostInfo> doSubscribe(RegistryNotifyListener listener, ServerInfo serverInfo) {
         String key = this.createKey(serverInfo);
 
         JedisPubSubNotifier notifier = new JedisPubSubNotifier();
@@ -79,11 +78,7 @@ public class RedisRegistryService extends AbstractRegistryService {
         notifier.setServerInfo(serverInfo);
         new SubNotifyThread(notifier).start();
         // 订阅之后，拉取数据，避免在订阅前发生了数据变更，未及时更新本地提供者列表
-        List<HostInfo> hostInfoList = this.pullServers(serverInfo);
-        RegistryNotifyInfo notifyInfo = new RegistryNotifyInfo();
-        notifyInfo.setServerInfo(serverInfo);
-        notifyInfo.setHostInfos(hostInfoList);
-        listener.registryNotify(notifyInfo);
+        return this.pullServers(serverInfo);
     }
 
     @Override

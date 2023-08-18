@@ -79,11 +79,10 @@ public class ZookeeperRegistryService extends AbstractRegistryService {
     }
 
     @Override
-    public void register(RegistryInfo registryInfo) {
+    public void doRegister(RegistryInfo registryInfo) {
         // 创建完整的路径
         String path = this.createFullPath(registryInfo);
         this.create(path, true);
-        registered.add(registryInfo);
     }
 
     @Override
@@ -99,18 +98,14 @@ public class ZookeeperRegistryService extends AbstractRegistryService {
     }
 
     @Override
-    public void subscribe(RegistryNotifyListener listener, ServerInfo serverInfo) {
+    public List<HostInfo> doSubscribe(RegistryNotifyListener listener, ServerInfo serverInfo) {
 
         String servicePath = this.createServicePath(serverInfo);
         this.create(servicePath, false);
         CuratorWatcher curatorWatcher = new CuratorWatcherImpl(listener, client, servicePath,
             serverInfo);
         List<String> hosts = this.addListener(curatorWatcher, servicePath);
-        List<HostInfo> hostInfoList = CommonUtils.hostsStr2HostInfos(hosts);
-        RegistryNotifyInfo notifyInfo = new RegistryNotifyInfo();
-        notifyInfo.setServerInfo(serverInfo);
-        notifyInfo.setHostInfos(hostInfoList);
-        listener.registryNotify(notifyInfo);
+        return CommonUtils.hostsStr2HostInfos(hosts);
     }
 
     @Override
