@@ -99,6 +99,7 @@ public class ZookeeperRegistryService implements RegistryService {
     public void subscribe(RegistryNotifyListener listener, ServerInfo serverInfo) {
 
         String servicePath = this.createServicePath(serverInfo);
+        this.create(servicePath, false);
         CuratorWatcher curatorWatcher = new CuratorWatcherImpl(listener, client, servicePath,
             serverInfo);
         this.addListener(curatorWatcher, servicePath);
@@ -133,6 +134,13 @@ public class ZookeeperRegistryService implements RegistryService {
     }
 
     private void create(String path, boolean ephemeral) {
+        // 检查持久化Znode是否存在，主要是订阅的是需要使用，订阅时可能提供者还没有启动
+        // 这里需要监控该节点
+        if(!ephemeral) {
+            if(this.checkExists(path)) {
+                return;
+            }
+        }
         int i = path.lastIndexOf('/');
         if (i > 0) {
             create(path.substring(0, i), false);
