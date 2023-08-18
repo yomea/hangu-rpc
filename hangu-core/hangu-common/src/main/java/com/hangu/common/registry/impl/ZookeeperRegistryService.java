@@ -12,7 +12,7 @@ import com.hangu.common.exception.RpcParseException;
 import com.hangu.common.listener.CuratorConnectionStateListener;
 import com.hangu.common.listener.RegistryNotifyListener;
 import com.hangu.common.properties.ZookeeperConfigProperties;
-import com.hangu.common.registry.RegistryService;
+import com.hangu.common.registry.AbstractRegistryService;
 import com.hangu.common.util.CommonUtils;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -39,7 +39,7 @@ import org.apache.zookeeper.Watcher;
  * @date 2023/8/17 10:14
  */
 @Slf4j
-public class ZookeeperRegistryService implements RegistryService {
+public class ZookeeperRegistryService extends AbstractRegistryService {
 
     private int DEFAULT_CONNECTION_TIMEOUT_MS = 5 * 1000;
     private int DEFAULT_SESSION_TIMEOUT_MS = 60 * 1000;
@@ -102,7 +102,12 @@ public class ZookeeperRegistryService implements RegistryService {
         this.create(servicePath, false);
         CuratorWatcher curatorWatcher = new CuratorWatcherImpl(listener, client, servicePath,
             serverInfo);
-        this.addListener(curatorWatcher, servicePath);
+        List<String> hosts = this.addListener(curatorWatcher, servicePath);
+        List<HostInfo> hostInfoList = CommonUtils.hostsStr2HostInfos(hosts);
+        RegistryNotifyInfo notifyInfo = new RegistryNotifyInfo();
+        notifyInfo.setServerInfo(serverInfo);
+        notifyInfo.setHostInfos(hostInfoList);
+        listener.registryNotify(notifyInfo);
     }
 
     @Override
@@ -267,7 +272,7 @@ public class ZookeeperRegistryService implements RegistryService {
         try {
             return client.getChildren().usingWatcher(curatorWatcher).forPath(servicePath);
         } catch (NoNodeException e) {
-            return null;
+            return Collections.emptyList();
         } catch (Exception e) {
             throw new IllegalStateException(e.getMessage(), e);
         }
@@ -308,13 +313,7 @@ public class ZookeeperRegistryService implements RegistryService {
 
                         List<String> hosts = client.getChildren().usingWatcher(CuratorWatcherImpl.this)
                             .forPath(servicePath);
-                        List<HostInfo> hostInfoList = hosts.stream().map(str -> {
-                            String arr[] = str.split(":");
-                            HostInfo hostInfo = new HostInfo();
-                            hostInfo.setHost(arr[0]);
-                            hostInfo.setPort(Integer.parseInt(arr[1]));
-                            return hostInfo;
-                        }).collect(Collectors.toList());
+                        List<HostInfo> hostInfoList = CommonUtils.hostsStr2HostInfos(hosts);
                         RegistryNotifyInfo notifyInfo = new RegistryNotifyInfo();
                         notifyInfo.setServerInfo(serverInfo);
                         notifyInfo.setHostInfos(hostInfoList);
@@ -328,4 +327,6 @@ public class ZookeeperRegistryService implements RegistryService {
             }
         }
     }
+
+
 }

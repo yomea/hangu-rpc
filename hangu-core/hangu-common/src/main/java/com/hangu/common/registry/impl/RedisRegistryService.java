@@ -12,6 +12,7 @@ import com.hangu.common.entity.ServerInfo;
 import com.hangu.common.enums.ErrorCodeEnum;
 import com.hangu.common.exception.RpcInvokerException;
 import com.hangu.common.listener.RegistryNotifyListener;
+import com.hangu.common.registry.AbstractRegistryService;
 import com.hangu.common.registry.RegistryService;
 import java.util.Collections;
 import java.util.List;
@@ -34,7 +35,7 @@ import redis.clients.jedis.JedisSentinelPool;
  * @date 2023/8/4 14:40
  */
 @Slf4j
-public class RedisRegistryService implements RegistryService {
+public class RedisRegistryService extends AbstractRegistryService {
 
     private static final Long EXPIRE_TIME = 12L * 1000L;
 

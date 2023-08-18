@@ -1,10 +1,13 @@
 package com.hangu.common.util;
 
 import cn.hutool.core.util.IdUtil;
+import com.hangu.common.entity.HostInfo;
 import com.hangu.common.entity.Response;
 import com.hangu.common.entity.RpcResponseTransport;
 import com.hangu.common.entity.ServerInfo;
 import java.lang.reflect.Constructor;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -79,4 +82,13 @@ public final class CommonUtils {
         }
     }
 
+    public static List<HostInfo> hostsStr2HostInfos(List<String> hosts) {
+        return hosts.stream().map(str -> {
+            String arr[] = str.split(":");
+            HostInfo hostInfo = new HostInfo();
+            hostInfo.setHost(arr[0]);
+            hostInfo.setPort(Integer.parseInt(arr[1]));
+            return hostInfo;
+        }).collect(Collectors.toList());
+    }
 }
