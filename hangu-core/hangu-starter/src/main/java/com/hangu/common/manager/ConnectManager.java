@@ -19,7 +19,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -123,38 +122,9 @@ public class ConnectManager implements RegistryNotifyListener {
     }
 
     public List<ClientConnect> getConnects() {
-        List<ClientConnect> ableConnects = KEY_CHANNELS.stream()
+        return KEY_CHANNELS.stream()
             .filter(connect -> Objects.nonNull(connect.getChannel()) && connect.getChannel().isActive())
             .collect(Collectors.toList());
-
-
-        if(CollectionUtil.isEmpty(ableConnects)) {
-            schedulePullService();
-        }
-
-        return ableConnects;
-    }
-
-    private void schedulePullService() {
-        if(Objects.nonNull(future)) {
-            return;
-        }
-        synchronized(this) {
-            if(Objects.nonNull(future)) {
-                return;
-            }
-            future = HanguRpcManager.getSchedule().schedule(new Runnable() {
-                @Override
-                public void run() {
-                    List<HostInfo> hostInfoList = ConnectManager.this.initPullService();
-                    if(CollectionUtil.isEmpty(hostInfoList)) {
-                        HanguRpcManager.getSchedule().schedule(this, 1, TimeUnit.SECONDS);
-                    } else {
-                        future = null;
-                    }
-                }
-            } , 1, TimeUnit.SECONDS);
-        }
     }
 
     private void subscribe(ServerInfo serverInfo) {

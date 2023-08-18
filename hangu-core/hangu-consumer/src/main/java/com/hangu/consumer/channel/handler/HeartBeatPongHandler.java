@@ -48,18 +48,20 @@ public class HeartBeatPongHandler extends SimpleChannelInboundHandler<PingPong> 
             if (IdleState.READER_IDLE == idleState) {
                 if (!ctx.channel().isActive()) {
                     this.reconnect(ctx);
+                } else if(retryBeat > 3) {
+                    // 重连
+                    this.reconnect(ctx);
                 } else {
                     PingPong pingPong = new PingPong();
                     pingPong.setId(CommonUtils.snowFlakeNextId());
                     pingPong.setSerializationType(SerializationTypeEnum.HESSIAN.getType());
                     // 发送心跳（从当前 context 往前）
                     ctx.writeAndFlush(pingPong).addListener(future -> {
-                        // 发送失败，有可能是连读断了，也有可能只是网络抖动问题
-                        if (!future.isSuccess() && ++retryBeat > 3) {
-                            // 重连
-                            this.reconnect(ctx);
+                        if (!future.isSuccess()) {
+                            log.error("发送心跳失败！", future.cause());
                         }
                     });
+                    ++retryBeat;
                 }
             }
         }
