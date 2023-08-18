@@ -11,6 +11,7 @@ import com.hangu.common.registry.RegistryService;
 import com.hangu.consumer.client.ClientConnect;
 import com.hangu.consumer.client.NettyClient;
 import io.netty.channel.Channel;
+import io.netty.util.AttributeKey;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -111,10 +112,13 @@ public class ConnectManager implements RegistryNotifyListener {
             log.error("连接失败，跳过");
             throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "连接失败，跳过", e);
         }
+
         ClientConnect client = new ClientConnect();
         client.setChannel(channel);
         client.setHostInfo(hostInfo);
         GLOBAL_HOST_INFO_CHANNEL.put(key, client);
+        AttributeKey<ClientConnect> attributeKey = AttributeKey.newInstance(channel.id().asLongText());
+        channel.attr(attributeKey).set(client);
         return client;
     }
 
@@ -145,6 +149,8 @@ public class ConnectManager implements RegistryNotifyListener {
                     List<HostInfo> hostInfoList = ConnectManager.this.initPullService();
                     if(CollectionUtil.isEmpty(hostInfoList)) {
                         HanguRpcManager.getSchedule().schedule(this, 1, TimeUnit.SECONDS);
+                    } else {
+                        future = null;
                     }
                 }
             } , 1, TimeUnit.SECONDS);

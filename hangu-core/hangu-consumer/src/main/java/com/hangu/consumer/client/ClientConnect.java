@@ -11,7 +11,11 @@ import lombok.Data;
 @Data
 public class ClientConnect {
 
-    private Channel channel;
+    private volatile Channel channel;
 
     private HostInfo hostInfo;
+
+    public void updateChannel(Channel channel) {
+        this.channel = channel;
+    }
 }

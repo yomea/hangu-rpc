@@ -3,10 +3,15 @@ server:
 hangu:
   rpc:
     provider:
-      port: 8089
+      port: 8089 # 提供者将要暴露的端口
     registry:
-      protocol: zookeeper
+      protocol: zookeeper # 选择zk作为注册中心
       redis:
-        nodes: xxx
-        master: xxx
-        password: xxxx
+        nodes: ip:port,ip2:port2 # redis哨兵模式哨兵集群地址
+        master: xxx # master的名字
+        password: xxx # redis的密码
+      zookeeper:
+        hosts: ip:port,ip2:port2 # zk集群地址
+        user-name: yyy
+        password: yyy
+

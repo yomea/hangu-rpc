@@ -3,12 +3,16 @@ package com.hangu.consumer.channel.handler;
 import com.hangu.common.entity.PingPong;
 import com.hangu.common.enums.SerializationTypeEnum;
 import com.hangu.common.util.CommonUtils;
+import com.hangu.consumer.client.ClientConnect;
 import com.hangu.consumer.client.NettyClient;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.util.AttributeKey;
 import java.net.SocketAddress;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +35,8 @@ public class HeartBeatPongHandler extends SimpleChannelInboundHandler<PingPong> 
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, PingPong pingPong) throws Exception {
+        // 收到消息，重置重试发送心跳次数
+        this.retryBeat = 0;
     }
 
     @Override
@@ -52,8 +58,6 @@ public class HeartBeatPongHandler extends SimpleChannelInboundHandler<PingPong> 
                         if (!future.isSuccess() && ++retryBeat > 3) {
                             // 重连
                             this.reconnect(ctx);
-                        } else {
-                            retryBeat = 0;
                         }
                     });
                 }
@@ -62,20 +66,27 @@ public class HeartBeatPongHandler extends SimpleChannelInboundHandler<PingPong> 
     }
 
     private void reconnect(ChannelHandlerContext ctx) {
+        ClientConnect clientConnect = ctx.channel()
+            .attr(AttributeKey.<ClientConnect>valueOf(ctx.channel().id().asLongText())).get();
         ctx.channel().close().addListener(future -> {
             SocketAddress remoteAddress = ctx.channel().remoteAddress();
             if (!future.isSuccess()) {
                 log.warn("通道{}关闭失败！", remoteAddress.toString());
                 return;
             }
-            ctx.channel().eventLoop().schedule(() -> {
+            ctx.channel().eventLoop().execute(() -> {
                 // 重连创建一个新的通道
                 nettyClient.reconnect(remoteAddress).addListener(f -> {
                     if (!f.isSuccess()) {
                         log.error("重新连接{}失败！", remoteAddress.toString());
+                    } else {
+                        if (Objects.nonNull(clientConnect)) {
+                            ChannelFuture channelFuture = (ChannelFuture) f;
+                            clientConnect.updateChannel(channelFuture.channel());
+                        }
                     }
                 });
-            }, 1, TimeUnit.SECONDS);
+            });
         });
     }
 }
