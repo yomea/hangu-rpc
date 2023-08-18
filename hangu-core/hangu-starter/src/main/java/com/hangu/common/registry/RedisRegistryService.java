@@ -1,4 +1,4 @@
-package com.hangu.common.registry.impl;
+package com.hangu.common.registry;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.collection.ConcurrentHashSet;
@@ -40,8 +40,6 @@ public class RedisRegistryService extends AbstractRegistryService {
     private static final Long EXPIRE_TIME = 12L * 1000L;
 
     private JedisSentinelPool jedisSentinelPool;
-
-    private final Set<RegistryInfo> registered = new ConcurrentHashSet<>();
 
     private final ScheduledExecutorService expireExecutor = Executors.newScheduledThreadPool(1,
         new NamedThreadFactory("HanguRedisRegistryExpireTimer", true));

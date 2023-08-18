@@ -1,5 +1,6 @@
-package com.hangu.common.registry.impl;
+package com.hangu.common.registry;
 
+import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.json.JSONUtil;
 import com.hangu.common.entity.HostInfo;
 import com.hangu.common.entity.RegistryInfo;
@@ -18,6 +19,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -63,7 +65,7 @@ public class ZookeeperRegistryService extends AbstractRegistryService {
             builder = builder.authorization("digest", authority.getBytes());
         }
         client = builder.build();
-        client.getConnectionStateListenable().addListener(new CuratorConnectionStateListener(properties));
+        client.getConnectionStateListenable().addListener(new CuratorConnectionStateListener(this, properties));
         client.start();
         boolean connected;
         try {
@@ -81,6 +83,7 @@ public class ZookeeperRegistryService extends AbstractRegistryService {
         // 创建完整的路径
         String path = this.createFullPath(registryInfo);
         this.create(path, true);
+        registered.add(registryInfo);
     }
 
     @Override

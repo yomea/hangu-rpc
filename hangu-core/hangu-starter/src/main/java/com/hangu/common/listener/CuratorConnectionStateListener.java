@@ -1,6 +1,8 @@
 package com.hangu.common.listener;
 
+import com.hangu.common.manager.HanguRpcManager;
 import com.hangu.common.properties.ZookeeperConfigProperties;
+import com.hangu.common.registry.RegistryService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
@@ -14,7 +16,10 @@ public class CuratorConnectionStateListener implements ConnectionStateListener {
         private int timeout;
         private int sessionExpireMs;
 
-        public CuratorConnectionStateListener(ZookeeperConfigProperties properties) {
+        private RegistryService registryService;
+
+        public CuratorConnectionStateListener(RegistryService registryService, ZookeeperConfigProperties properties) {
+            this.registryService = registryService;
             this.timeout = properties.getConnectTimeout();
             this.sessionExpireMs = properties.getSessionTimeout();
         }
@@ -33,6 +38,11 @@ public class CuratorConnectionStateListener implements ConnectionStateListener {
             } else if (state == ConnectionState.SUSPENDED) {
                 log.warn("Curator zookeeper connection of session " + Long.toHexString(sessionId) + " timed out. " +
                         "connection timeout value is " + timeout + ", session expire timeout value is " + sessionExpireMs);
+                // 因为创建的是临时节点，所以这里要重新注册和重新订阅
+                HanguRpcManager.getGlobalExecutor().execute(() -> {
+                    registryService.retryRegister();
+                    registryService.retrySubscribe();
+                });
             } else if (state == ConnectionState.CONNECTED) {
                 lastSessionId = sessionId;
                 log.info("Curator zookeeper client instance initiated successfully, session id is " + Long.toHexString(sessionId));
@@ -45,6 +55,11 @@ public class CuratorConnectionStateListener implements ConnectionStateListener {
                             "old session " + Long.toHexString(lastSessionId) + ", new session " + Long.toHexString(sessionId));
                     lastSessionId = sessionId;
                 }
+                // 因为创建的是临时节点，所以这里要重新注册和重新订阅
+                HanguRpcManager.getGlobalExecutor().execute(() -> {
+                    registryService.retryRegister();
+                    registryService.retrySubscribe();
+                });
             }
         }
 

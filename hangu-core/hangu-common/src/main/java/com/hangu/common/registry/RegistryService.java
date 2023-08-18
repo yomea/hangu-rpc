@@ -20,4 +20,7 @@ public interface RegistryService {
 
     List<HostInfo> pullServers(ServerInfo serverInfo);
 
+    void retryRegister();
+    void retrySubscribe();
+
 }
