@@ -23,4 +23,5 @@ public interface RegistryService {
     void retryRegister();
     void retrySubscribe();
 
+    void close();
 }

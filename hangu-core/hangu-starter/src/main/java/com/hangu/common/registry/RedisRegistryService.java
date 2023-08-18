@@ -82,6 +82,11 @@ public class RedisRegistryService extends AbstractRegistryService {
     }
 
     @Override
+    protected void doClose() {
+        this.jedisSentinelPool.close();
+    }
+
+    @Override
     public List<HostInfo> pullServers(ServerInfo serverInfo) {
         Jedis jedis = this.jedisSentinelPool.getResource();
         String key = this.createKey(serverInfo);

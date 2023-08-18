@@ -253,10 +253,6 @@ public class ZookeeperRegistryService extends AbstractRegistryService {
         return null;
     }
 
-    private void close() {
-        client.close();
-    }
-
     private String createServicePath(ServerInfo serverInfo) {
         return "/" + CommonUtils.createServiceKey(serverInfo);
     }
@@ -326,5 +322,8 @@ public class ZookeeperRegistryService extends AbstractRegistryService {
         }
     }
 
-
+    @Override
+    protected void doClose() {
+        client.close();
+    }
 }

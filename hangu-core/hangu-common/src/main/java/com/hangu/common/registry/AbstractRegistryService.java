@@ -51,4 +51,13 @@ public abstract class AbstractRegistryService implements RegistryService{
             this.subscribe(registryNotifyListener, serverInfo);
         }));
     }
+
+    @Override
+    public void close() {
+        registered.stream().forEach(this::unRegister);
+        registered.clear();
+        this.doClose();
+    }
+
+    protected abstract void doClose();
 }

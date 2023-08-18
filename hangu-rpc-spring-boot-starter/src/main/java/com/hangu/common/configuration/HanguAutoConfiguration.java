@@ -74,7 +74,7 @@ public class HanguAutoConfiguration {
                 configPropertis.getPassword());
         }
 
-        @Bean
+        @Bean(destroyMethod = "close")
         @ConditionalOnMissingBean(RegistryService.class)
         public RegistryService redisRegistryService(JedisSentinelPool jedisSentinelPool) {
             return new RedisRegistryService(jedisSentinelPool);
@@ -94,7 +94,7 @@ public class HanguAutoConfiguration {
             return properties;
         }
 
-        @Bean
+        @Bean(destroyMethod = "close")
         @ConditionalOnMissingBean(RegistryService.class)
         public RegistryService zookeeperRegistryService(ZookeeperConfigProperties zookeeperConfigProperties) {
             return new ZookeeperRegistryService(zookeeperConfigProperties);
