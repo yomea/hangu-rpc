@@ -80,6 +80,12 @@ public class RedisRegistryService extends AbstractRegistryService {
         notifier.setRegistryNotifyListener(listener);
         notifier.setServerInfo(serverInfo);
         new SubNotifyThread(notifier).start();
+        // 订阅之后，拉取数据，避免在订阅前发生了数据变更，未及时更新本地提供者列表
+        List<HostInfo> hostInfoList = this.pullServers(serverInfo);
+        RegistryNotifyInfo notifyInfo = new RegistryNotifyInfo();
+        notifyInfo.setServerInfo(serverInfo);
+        notifyInfo.setHostInfos(hostInfoList);
+        listener.registryNotify(notifyInfo);
     }
 
     @Override
