@@ -31,6 +31,14 @@ import lombok.extern.slf4j.Slf4j;
 public class RequestMessageCodec extends MessageToMessageCodec<ByteBuf, Request> {
 
     @Override
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+        if(!ctx.channel().isWritable()) {
+            ctx.channel().flush();
+        }
+        ctx.fireChannelWritabilityChanged();
+    }
+
+    @Override
     protected void encode(ChannelHandlerContext ctx, Request request, List<Object> out) throws Exception {
         // 超过最高水位线，暂时不允许发送请求
         if(!ctx.channel().isWritable()) {
