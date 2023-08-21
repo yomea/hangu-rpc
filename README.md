@@ -14,7 +14,7 @@ hangu 是函谷的拼音。
 
 #### 软件架构
 
-![architecture](./image/hangu-architecture.png)
+![architecture](image/hangu-architecture.png)
 
 从架构图中可以看到，心跳由消费者主动发起，默认每隔2s向服务提供者发送心跳包，心跳的实现很简单，在消费者这边
 使用 Netty 提供的 IdleStateHandler 事件处理器，在每隔2s发起读超时事件时向提供者发送心跳，超过3次未收到
