@@ -14,6 +14,7 @@ import com.hangu.common.entity.ServerInfo;
 import com.hangu.common.enums.ErrorCodeEnum;
 import com.hangu.common.enums.MethodCallTypeEnum;
 import com.hangu.common.enums.SerializationTypeEnum;
+import com.hangu.common.exception.NoServiceFoundException;
 import com.hangu.common.exception.RpcInvokerException;
 import com.hangu.common.exception.RpcInvokerTimeoutException;
 import com.hangu.common.manager.ConnectManager;
@@ -61,7 +62,7 @@ public class RpcReferenceHandler implements InvocationHandler {
 
         List<ClientConnect> connects = this.connectManager.getConnects();
         if (CollectionUtil.isEmpty(connects)) {
-            throw new ServiceNotFoundException(
+            throw new NoServiceFoundException(ErrorCodeEnum.NOT_FOUND.getCode(),
                 String.format("未找到 groupName = %s, interfaceName = %s, version = %s的有效服务连接地址，请检查是否启动服务提供者！",
                     this.serverInfo.getGroupName(),
                     this.serverInfo.getInterfaceName(), this.serverInfo.getVersion()));

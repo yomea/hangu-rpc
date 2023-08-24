@@ -45,7 +45,7 @@ public class RequestMessageHandler extends SimpleChannelInboundHandler<Request> 
         if (Objects.isNull(rpcInvoker)) {
             // 未找到对应的服务
             NoServiceFoundException exception =
-                new NoServiceFoundException(String.format("服务名为%s的接口未注册！", key));
+                new NoServiceFoundException(ErrorCodeEnum.NOT_FOUND.getCode(), String.format("服务名为%s的接口未注册！", key));
             Response response = CommonUtils.createResponseInfo(msg.getId(), msg.getSerializationType(),
                 ErrorCodeEnum.NOT_FOUND.getCode(), NoServiceFoundException.class, exception);
             ctx.writeAndFlush(response);

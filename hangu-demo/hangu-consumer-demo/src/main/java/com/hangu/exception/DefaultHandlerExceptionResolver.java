@@ -2,9 +2,12 @@ package com.hangu.exception;
 
 import cn.hutool.json.JSONUtil;
 import com.hangu.common.exception.RpcInvokerException;
+import com.hangu.common.exception.RpcParseException;
+import com.hangu.common.exception.UnSupportSerialTypeException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -34,15 +37,33 @@ public class DefaultHandlerExceptionResolver implements HandlerExceptionResolver
         try {
             Map<String, Object> map = new HashMap<>();
             map.put("code", 500);
-            if (ex instanceof RpcInvokerException) {
-                RpcInvokerException rpcInvokerException = (RpcInvokerException) ex;
-                map.put("code", rpcInvokerException.getCode());
-            }
-            map.put("message", ex.getMessage());
+            map.put("message", "系统开了个小差，请联系管理员处理！");
+            this.dealException(ex, map);
             response.getWriter().write(JSONUtil.toJsonStr(map));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         return new ModelAndView();
+    }
+
+    private void dealException(Throwable ex, Map<String, Object> map) {
+        if (Objects.isNull(ex)) {
+            return;
+        }
+        if (ex instanceof RpcInvokerException) {
+            RpcInvokerException rpcInvokerException = (RpcInvokerException) ex;
+            map.put("code", rpcInvokerException.getCode());
+            map.put("message", rpcInvokerException.getMessage());
+        } else if (ex instanceof RpcParseException) {
+            RpcParseException rpcParseException = (RpcParseException) ex;
+            map.put("code", rpcParseException.getCode());
+            map.put("message", rpcParseException.getMessage());
+        } else if (ex instanceof UnSupportSerialTypeException) {
+            UnSupportSerialTypeException unSupportSerialTypeException = (UnSupportSerialTypeException) ex;
+            map.put("code", 500);
+            map.put("message", unSupportSerialTypeException.getMessage());
+        } else {
+            this.dealException(ex.getCause(), map);
+        }
     }
 }
