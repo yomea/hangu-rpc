@@ -2,6 +2,7 @@
 
 <div style="margin-top: 40px; margin-bottom: -30px;">
     <p align="center" style="display: flex; justify-content: center; gap: 20px;">
+      <img src="https://img.shields.io/badge/hangu%20rpc-v0.5%20alpha-blue" style="max-width: 100px; height: auto;">
       <img src="https://img.shields.io/badge/Source-github-d021d6?style=flat&logo=GitHub" style="max-width: 100px; height: auto;">
       <img src="https://img.shields.io/badge/JDK-1.8+-ffcc00" style="max-width: 100px; height: auto;">
       <img src="https://img.shields.io/badge/Apache_License-2.0-33ccff" style="max-width: 100px; height: auto;">
