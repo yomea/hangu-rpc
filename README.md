@@ -249,19 +249,6 @@ public class HanguRpcBootstrapConfig {
 
 ```
 
-或者
-
-```java
-@Configuration
-public class HanguRpcBootstrapConfig {
-    
-    @Bean
-    public HanguAutoConfiguration hanguAutoConfiguration() {
-        return new HanguAutoConfiguration();
-    }
-
-}
-```
 注意：要确保加入了以下依赖(该依赖用于处理ConfigurationProperties注解)
 ```xml
 <dependency>
