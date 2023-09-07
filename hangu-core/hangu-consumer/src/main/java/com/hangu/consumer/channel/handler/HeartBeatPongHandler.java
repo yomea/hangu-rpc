@@ -63,7 +63,11 @@ public class HeartBeatPongHandler extends SimpleChannelInboundHandler<PingPong> 
                     });
                     ++retryBeat;
                 }
+            } else {
+                super.userEventTriggered(ctx, evt);
             }
+        } else {
+            super.userEventTriggered(ctx, evt);
         }
     }
 
