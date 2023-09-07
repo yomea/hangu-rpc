@@ -32,7 +32,11 @@ public class HeartBeatPingHandler extends SimpleChannelInboundHandler<PingPong> 
             if (IdleState.ALL_IDLE == idleState) {
                 // 关闭连接
                 ctx.channel().close();
+            } else {
+                super.userEventTriggered(ctx, evt);
             }
+        } else {
+            super.userEventTriggered(ctx, evt);
         }
     }
 
