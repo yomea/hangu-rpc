@@ -7,6 +7,7 @@ import com.hangu.consumer.client.ClientConnect;
 import com.hangu.consumer.client.NettyClient;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
@@ -23,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * @date 2023/8/2 10:40
  */
 @Slf4j
-public class HeartBeatPongHandler extends SimpleChannelInboundHandler<PingPong> {
+public class HeartBeatPongHandler extends ChannelInboundHandlerAdapter {
 
     private NettyClient nettyClient;
 
@@ -34,8 +35,8 @@ public class HeartBeatPongHandler extends SimpleChannelInboundHandler<PingPong> 
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, PingPong pingPong) throws Exception {
-        // 收到消息，重置重试发送心跳次数
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        // 收到消息（无论是心跳消息还是任何其他rpc消息），重置重试发送心跳次数
         this.retryBeat = 0;
     }
 
@@ -48,6 +49,7 @@ public class HeartBeatPongHandler extends SimpleChannelInboundHandler<PingPong> 
             if (IdleState.READER_IDLE == idleState) {
                 if (!ctx.channel().isActive()) {
                     this.reconnect(ctx);
+                    // 超过三次都没有收到服务器的响应
                 } else if(retryBeat > 3) {
                     // 重连
                     this.reconnect(ctx);
