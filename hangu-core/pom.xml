@@ -29,9 +29,17 @@
     <zookeeper.version>3.4.13</zookeeper.version>
     <curator.version>4.1.0</curator.version>
     <commons-lang3.version>3.2.1</commons-lang3.version>
+    <spring-beans.version>5.3.30</spring-beans.version>
   </properties>
 
   <dependencies>
+
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+      <version>${spring-beans.version}</version>
+      <optional>true</optional>
+    </dependency>
 
     <dependency>
       <groupId>org.projectlombok</groupId>

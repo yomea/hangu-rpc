@@ -1,6 +1,7 @@
 package com.hangu.entity;
 
 import java.io.Serializable;
+import java.util.List;
 import lombok.Data;
 
 /**
@@ -11,6 +12,7 @@ import lombok.Data;
 public class UserInfo implements Serializable {
 
     private String name;
+    private List<String> names;
 
     private int age;
 
