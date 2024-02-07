@@ -27,4 +27,7 @@ public interface UserService {
     UserInfo getUserInfo(UserInfo userInfo);
 
     List<UserInfo> getUserInfos(List<UserInfo> userInfos);
+
+    UserInfo xxx(String name, int age);
+    UserInfo yyy(UserInfo userInfo);
 }

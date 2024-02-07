@@ -48,7 +48,7 @@ public class RequestMessageCodec extends MessageToMessageCodec<ByteBuf, Request>
         // 魔数 2bytes
         byteBuf.writeShort(hanguCons.MAGIC);
         // 请求类型，序列化方式 1bytes
-        byte finalMsgType = MsgTypeMarkEnum.REQUEST_FLAG.getMark();
+        byte finalMsgType = request.isHttp() ? MsgTypeMarkEnum.HTTP_REQUEST_FLAG.getMark() : MsgTypeMarkEnum.REQUEST_FLAG.getMark();
         byte serializationType = request.getSerializationType();
         finalMsgType |= serializationType;
         // 消息类型 1byte
@@ -109,6 +109,7 @@ public class RequestMessageCodec extends MessageToMessageCodec<ByteBuf, Request>
         Long id = byteBuf.readLong();
         byte serialType = (byte) (hanguCons.SERIALIZATION_MARK & msgType);
         try {
+            System.err.println(requstFlag);
             if ((MsgTypeMarkEnum.HEART_FLAG.getMark() & msgType) != 0) {
 
                 PingPong pingPong = this.dealHeart(id, serialType);

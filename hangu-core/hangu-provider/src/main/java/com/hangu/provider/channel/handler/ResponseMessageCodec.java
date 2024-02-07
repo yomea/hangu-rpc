@@ -79,18 +79,21 @@ public class ResponseMessageCodec extends MessageToMessageCodec<ByteBuf, Respons
             return;
         }
         byte msgType = byteBuf.readByte();
-        // 判断请求类型
-        int requstFlag = MsgTypeMarkEnum.REQUEST_FLAG.getMark() & msgType;
         // 请求id
         Long id = byteBuf.readLong();
         byte serialType = (byte) (hanguCons.SERIALIZATION_MARK & msgType);
         try {
-            // 表示是来自客户端的请求
-            if (requstFlag != 0) {
+            System.out.println(msgType);
+            // 表示是来自客户端的 http 请求
+            if((MsgTypeMarkEnum.HTTP_REQUEST_FLAG.getMark() & msgType) == MsgTypeMarkEnum.HTTP_REQUEST_FLAG.getMark()) {
+                Request request = this.dealRequest(id, byteBuf, serialType);
+                request.setHttp(true);
+                list.add(request);
+            } else if ((MsgTypeMarkEnum.REQUEST_FLAG.getMark() & msgType) == MsgTypeMarkEnum.REQUEST_FLAG.getMark()) {
                 Request request = this.dealRequest(id, byteBuf, serialType);
                 list.add(request);
                 // 心跳
-            } else if ((MsgTypeMarkEnum.HEART_FLAG.getMark() & msgType) != 0) {
+            } else if ((MsgTypeMarkEnum.HEART_FLAG.getMark() & msgType) == MsgTypeMarkEnum.HEART_FLAG.getMark()) {
 
                 PingPong pingPong = this.dealHeart(id, serialType);
                 list.add(pingPong);

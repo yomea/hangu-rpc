@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import org.apache.commons.lang3.ClassUtils;
 
 /**
  * 类与字节码符号转化工具
@@ -98,5 +99,31 @@ public final class DescClassUtils {
 
     public static ClassLoader getClassLoader(Class<?> cls) {
         return CommonUtils.getClassLoader(cls);
+    }
+
+    public static Object getInitPrimitiveValue(Class<?> type) {
+
+        if(!ClassUtils.isPrimitiveOrWrapper(type) || ClassUtils.isPrimitiveWrapper(type)) {
+            return null;
+        }
+        if (boolean.class == type) {
+            return false;
+        } else if (byte.class == type) {
+            return (byte) 0;
+        } else if (char.class == type) {
+            return (char) 0;
+        } else if (double.class == type) {
+            return 0D;
+        } else if (float.class == type) {
+            return 0F;
+        } else if (int.class == type) {
+            return 0;
+        } else if (long.class == type) {
+            return 0L;
+        } else if (short.class == type) {
+            return (short)0;
+        } else {
+            return null;
+        }
     }
 }

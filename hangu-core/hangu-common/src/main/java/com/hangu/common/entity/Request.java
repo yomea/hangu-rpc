@@ -11,6 +11,8 @@ import lombok.Data;
 @Data
 public class Request implements Serializable {
 
+    private boolean http = false;
+
     /**
      * 请求ID，8字节
      */

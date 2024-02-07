@@ -7,6 +7,7 @@ import com.hangu.common.context.HanguContext;
 import com.hangu.common.entity.MethodInfo;
 import com.hangu.common.entity.ParameterInfo;
 import com.hangu.common.entity.Request;
+import com.hangu.common.entity.RequestHandlerInfo;
 import com.hangu.common.entity.RpcRequestPromise;
 import com.hangu.common.entity.RpcRequestTransport;
 import com.hangu.common.entity.RpcResult;
@@ -33,7 +34,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import javax.management.ServiceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -43,16 +43,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RpcReferenceHandler implements InvocationHandler {
 
-    private ServerInfo serverInfo;
+    private RequestHandlerInfo requestHandlerInfo;
 
     private ConnectManager connectManager;
 
     private Map<Method, MethodInfo> methodInfoCache;
 
-    public RpcReferenceHandler(ServerInfo serverInfo,
+    public RpcReferenceHandler(RequestHandlerInfo requestHandlerInfo,
         ConnectManager connectManager,
         Map<Method, MethodInfo> methodInfoCache) {
-        this.serverInfo = serverInfo;
+        this.requestHandlerInfo = requestHandlerInfo;
         this.connectManager = connectManager;
         this.methodInfoCache = methodInfoCache;
     }
@@ -60,12 +60,14 @@ public class RpcReferenceHandler implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
+        ServerInfo serverInfo = this.requestHandlerInfo.getServerInfo();
         List<ClientConnect> connects = this.connectManager.getConnects();
         if (CollectionUtil.isEmpty(connects)) {
             throw new NoServiceFoundException(ErrorCodeEnum.NOT_FOUND.getCode(),
-                String.format("未找到 groupName = %s, interfaceName = %s, version = %s的有效服务连接地址，请检查是否启动服务提供者！",
-                    this.serverInfo.getGroupName(),
-                    this.serverInfo.getInterfaceName(), this.serverInfo.getVersion()));
+                String.format(
+                    "未找到 groupName = %s, interfaceName = %s, version = %s的有效服务连接地址，请检查是否启动服务提供者！",
+                    serverInfo.getGroupName(),
+                    serverInfo.getInterfaceName(), serverInfo.getVersion()));
         }
         // TODO: 2023/8/2 负载均衡，先随便来个随机
         int index = RandomUtil.getRandom().nextInt(0, connects.size());
@@ -81,14 +83,16 @@ public class RpcReferenceHandler implements InvocationHandler {
         MethodInfo methodInfo = methodInfoCache.get(method);
 
         Request request = new Request();
+        request.setHttp(requestHandlerInfo.isHttp());
         request.setId(CommonUtils.snowFlakeNextId());
         request.setSerializationType(SerializationTypeEnum.HESSIAN.getType());
 
         RpcRequestTransport invokerTransport = new RpcRequestTransport();
-        invokerTransport.setGroupName(this.serverInfo.getGroupName());
-        invokerTransport.setInterfaceName(this.serverInfo.getInterfaceName());
-        invokerTransport.setVersion(this.serverInfo.getVersion());
-        invokerTransport.setMethodName(methodInfo.getName());
+        invokerTransport.setGroupName(serverInfo.getGroupName());
+        invokerTransport.setInterfaceName(serverInfo.getInterfaceName());
+        invokerTransport.setVersion(serverInfo.getVersion());
+        invokerTransport.setMethodName(
+            requestHandlerInfo.isHttp() ? requestHandlerInfo.getMethodName() : methodInfo.getName());
 
         List<ParameterInfo> factParameterInfoList = Optional.ofNullable(methodInfo.getFactParameterInfoList())
             .orElse(Collections.emptyList())

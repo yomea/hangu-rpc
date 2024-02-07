@@ -7,6 +7,7 @@ import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.PropertyValue;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.lang.Nullable;
 
 /**
@@ -15,8 +16,10 @@ import org.springframework.lang.Nullable;
  */
 public class WebDataBinder {
 
+    public static final ConversionService CONVERSION_SERVICE = new DefaultConversionService();
+
     // 默认自动扩充的集合为256，避免恶意传入index很大的参数
-    public static final int DEFAULT_AUTO_GROW_COLLECTION_LIMIT = 256;
+    private static final int DEFAULT_AUTO_GROW_COLLECTION_LIMIT = 256;
 
     private boolean ignoreUnknownFields = true;
 

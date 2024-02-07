@@ -3,6 +3,7 @@ package com.hangu.consumer.reference;
 import com.hangu.common.callback.RpcResponseCallback;
 import com.hangu.common.entity.MethodInfo;
 import com.hangu.common.entity.ParameterInfo;
+import com.hangu.common.entity.RequestHandlerInfo;
 import com.hangu.common.entity.ServerInfo;
 import com.hangu.common.enums.ErrorCodeEnum;
 import com.hangu.common.enums.MethodCallTypeEnum;
@@ -32,7 +33,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class ReferenceBean<T> {
 
-    private ServerInfo serverInfo;
+    private RequestHandlerInfo requestHandlerInfo;
 
     private Class<T> interfaceClass;
 
@@ -44,14 +45,15 @@ public class ReferenceBean<T> {
 
     private HanguProperties hanguProperties;
 
-    public ReferenceBean(ServerInfo serverInfo, Class<T> interfaceClass,
+    public ReferenceBean(RequestHandlerInfo requestHandlerInfo, Class<T> interfaceClass,
         RegistryService registryService, HanguProperties hanguProperties) {
+        ServerInfo serverInfo = requestHandlerInfo.getServerInfo();
         String interfaceName = serverInfo.getInterfaceName();
         if (StringUtils.isBlank(interfaceName)) {
             interfaceName = interfaceClass.getName();
         }
         serverInfo.setInterfaceName(interfaceName);
-        this.serverInfo = serverInfo;
+        this.requestHandlerInfo = requestHandlerInfo;
         this.interfaceClass = interfaceClass;
         this.registryService = registryService;
         this.hanguProperties = hanguProperties;
@@ -59,7 +61,7 @@ public class ReferenceBean<T> {
 
     public T buildServiceProxy(ClassLoader classLoader) {
         RpcReferenceHandler rpcReferenceHandler =
-            new RpcReferenceHandler(this.serverInfo, this.connectManager, this.methodInfoCache);
+            new RpcReferenceHandler(this.requestHandlerInfo, this.connectManager, this.methodInfoCache);
 
         return (T) Proxy.newProxyInstance(classLoader, new Class<?>[]{interfaceClass}, rpcReferenceHandler);
     }
@@ -75,7 +77,7 @@ public class ReferenceBean<T> {
 
     private void initLocalServiceDirectory() {
 
-        this.connectManager = new ConnectManager(registryService, this.serverInfo);
+        this.connectManager = new ConnectManager(registryService, this.requestHandlerInfo.getServerInfo());
     }
 
     private void buildMethodInfoCache() {
@@ -140,10 +142,11 @@ public class ReferenceBean<T> {
     }
 
     private String msgPrefix(Method method) {
+        ServerInfo serverInfo = this.requestHandlerInfo.getServerInfo();
         return String.format(
             "group: %s, interfaceName: %s, version: %s, interfaceClass: %s，methodName：%s, "
                 + "parameterTypes: %s",
-            this.serverInfo.getGroupName(), this.serverInfo.getInterfaceName(), this.serverInfo.getVersion(),
+            serverInfo.getGroupName(), serverInfo.getInterfaceName(), serverInfo.getVersion(),
             this.interfaceClass.getName(),
             method.getName(), Arrays.stream(method.getParameterTypes()).map(Class::getName).collect(
                 Collectors.joining(",")));

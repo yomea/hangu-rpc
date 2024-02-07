@@ -59,7 +59,7 @@ public class NettyServer {
                             .addLast(new ResponseMessageCodec())
                             // 用于心跳编码
                             .addLast(new HeartBeatEncoder())
-                            .addLast("logging", loggingHandler)
+//                            .addLast("logging", loggingHandler)
                             // 读写时间超过8s，表示该链接已失效，为什么是读写超时呢？相对于这个链接来说，我收不到客户端的请求属于链接
                             // 失效，写不出数据到客户端也任何连接失效
                             .addLast(new IdleStateHandler(0, 0, 8, TimeUnit.SECONDS))

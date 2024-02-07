@@ -9,6 +9,6 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 public class ByteFrameDecoder extends LengthFieldBasedFrameDecoder {
 
     public ByteFrameDecoder() {
-        super(2048, 11, 4, 0, 0);
+        super(2048 * 10, 11, 4, 0, 0);
     }
 }

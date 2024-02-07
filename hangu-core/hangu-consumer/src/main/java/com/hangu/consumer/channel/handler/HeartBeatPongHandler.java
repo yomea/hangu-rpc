@@ -35,9 +35,17 @@ public class HeartBeatPongHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        // 尝试重连
+        this.reconnect(ctx);
+        super.channelInactive(ctx);
+    }
+
+    @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         // 收到消息（无论是心跳消息还是任何其他rpc消息），重置重试发送心跳次数
         this.retryBeat = 0;
+        super.channelRead(ctx, msg);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.hangu.consumer.factory;
 
+import com.hangu.common.entity.RequestHandlerInfo;
 import com.hangu.common.entity.ServerInfo;
 import com.hangu.common.properties.HanguProperties;
 import com.hangu.common.registry.RegistryService;
@@ -45,8 +46,10 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
 
     @Override
     public void afterPropertiesSet() throws Exception {
-
-        ReferenceBean<T> referenceBean = new ReferenceBean<>(this.serverInfo, this.interfaceClass, registryService,
+        RequestHandlerInfo requestHandlerInfo = new RequestHandlerInfo();
+        requestHandlerInfo.setHttp(false);
+        requestHandlerInfo.setServerInfo(this.serverInfo);
+        ReferenceBean<T> referenceBean = new ReferenceBean<>(requestHandlerInfo, this.interfaceClass, registryService,
             hanguProperties);
         this.service = ServiceReference.reference(referenceBean, CommonUtils.getClassLoader(this.getClass()));
     }

@@ -12,7 +12,7 @@ import lombok.Data;
 public class UserInfo implements Serializable {
 
     private String name;
-    private List<String> names;
+    private List<String> aliasNames;
 
     private int age;
 

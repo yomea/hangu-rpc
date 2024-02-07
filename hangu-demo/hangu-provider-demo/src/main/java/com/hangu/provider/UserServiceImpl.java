@@ -57,4 +57,17 @@ public class UserServiceImpl implements UserService {
     public List<UserInfo> getUserInfos(List<UserInfo> userInfos) {
         return userInfos;
     }
+
+    @Override
+    public UserInfo xxx(String name, int age) {
+        UserInfo userInfo = new UserInfo();
+        userInfo.setName(name);
+        userInfo.setAge(age);
+        return userInfo;
+    }
+
+    @Override
+    public UserInfo yyy(UserInfo userInfo) {
+        return userInfo;
+    }
 }
