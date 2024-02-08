@@ -1,5 +1,6 @@
 package com.hangu.provider.invoker;
 
+import cn.hutool.json.JSONUtil;
 import com.hangu.common.entity.HttpServletRequest;
 import com.hangu.common.entity.Request;
 import com.hangu.common.entity.Response;
@@ -67,8 +68,13 @@ public class RpcInvoker {
             Method method = clss.getMethod(methodName, parameterTypeArr);
             method.setAccessible(true);
             Object result = method.invoke(service, parameterValuesArr);
-            response = CommonUtils.createResponseInfo(request.getId(), request.getSerializationType(),
-                ErrorCodeEnum.SUCCESS.getCode(), method.getReturnType(), result);
+            if(http) {
+                response = CommonUtils.createResponseInfo(request.getId(), request.getSerializationType(),
+                    ErrorCodeEnum.SUCCESS.getCode(), String.class, JSONUtil.toJsonStr(result));
+            } else {
+                response = CommonUtils.createResponseInfo(request.getId(), request.getSerializationType(),
+                    ErrorCodeEnum.SUCCESS.getCode(), method.getReturnType(), result);
+            }
         } catch (NoSuchMethodException e) {
             response = CommonUtils.createResponseInfo(request.getId(), request.getSerializationType(),
                 ErrorCodeEnum.NOT_FOUND.getCode(), e.getClass(), e);

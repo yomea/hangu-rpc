@@ -7,5 +7,5 @@ package com.hangu.consumer.http;
  */
 public interface HttpGenericService {
 
-   Object http();
+   String http();
 }
