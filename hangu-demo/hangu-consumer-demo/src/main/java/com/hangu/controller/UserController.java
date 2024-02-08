@@ -89,8 +89,9 @@ public class UserController {
 
     @GetMapping("/{interfaceName}/{methodName}/generic/api")
     public String h(HttpServletRequest request) throws Exception {
-        HttpGenericService httpProxy = HttpGenericProxyFactory.httpProxy(request, registryService, hanguProperties);
-        return httpProxy.http();
+        com.hangu.common.entity.HttpServletRequest apiRequest = HttpGenericProxyFactory.buildRequest(request);
+        HttpGenericService httpProxy = HttpGenericProxyFactory.httpProxy(request.getRequestURI(), registryService, hanguProperties);
+        return httpProxy.http(apiRequest);
     }
 
 

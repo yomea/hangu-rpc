@@ -10,16 +10,27 @@ import com.hangu.common.enums.MethodCallTypeEnum;
 import com.hangu.common.exception.RpcInvokerException;
 import com.hangu.common.properties.HanguProperties;
 import com.hangu.common.registry.RegistryService;
+import com.hangu.common.util.CommonUtils;
 import com.hangu.consumer.reference.ReferenceBean;
 import com.hangu.consumer.reference.ServiceReference;
 import com.hangu.entity.ServerMethodInfo;
+import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.multipart.InterfaceHttpData;
+import io.netty.handler.codec.http.multipart.MemoryAttribute;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,10 +48,10 @@ public class HttpGenericProxyFactory {
     private static final Map<String, Object> LOCK = new ConcurrentHashMap<>(8192);
     private static final Object OBJECT = new Object();
 
-    public static HttpGenericService httpProxy(javax.servlet.http.HttpServletRequest request,
+    public static HttpGenericService httpProxy(String uri,
         RegistryService registryService, HanguProperties hanguProperties) throws Exception {
 
-        ServerMethodInfo serverMethodInfo = HttpGenericProxyFactory.parsePathVariables(request);
+        ServerMethodInfo serverMethodInfo = HttpGenericProxyFactory.parsePathVariables(uri);
         String cacheKey = HttpGenericProxyFactory.createCacheKey(serverMethodInfo);
         HttpGenericService httpGenericService = HTTP_PROXY.get(cacheKey);
         if (Objects.nonNull(httpGenericService)) {
@@ -53,7 +64,7 @@ public class HttpGenericProxyFactory {
         }
 
         try {
-            RequestHandlerInfo requestHandlerInfo = HttpGenericProxyFactory.buildRequestHandlerInfo(request, serverMethodInfo);
+            RequestHandlerInfo requestHandlerInfo = HttpGenericProxyFactory.buildRequestHandlerInfo(serverMethodInfo);
             ReferenceBean<HttpGenericService> referenceBean = new ReferenceBean<>(requestHandlerInfo,
                 HttpGenericService.class, registryService, hanguProperties);
             HttpGenericService httpService = ServiceReference.reference(referenceBean);
@@ -78,10 +89,9 @@ public class HttpGenericProxyFactory {
         );
     }
 
-    private static ServerMethodInfo parsePathVariables(HttpServletRequest request) {
+    private static ServerMethodInfo parsePathVariables(String URI) {
 
         // /groupName/version/interfaceName/methodName/generic/api
-        String URI = request.getRequestURI();
         String[] pathVariableArr = URI.split("/");
         List<String> ablePatchVariables = Arrays.stream(pathVariableArr).filter(StringUtils::isNotBlank)
             .collect(Collectors.toList());
@@ -108,11 +118,9 @@ public class HttpGenericProxyFactory {
             .build();
     }
 
-    private static RequestHandlerInfo buildRequestHandlerInfo(HttpServletRequest request,
-        ServerMethodInfo serverMethodInfo) throws Exception {
+    private static RequestHandlerInfo buildRequestHandlerInfo(ServerMethodInfo serverMethodInfo) {
 
         RequestHandlerInfo requestHandlerInfo = new RequestHandlerInfo();
-
         ServerInfo serverInfo = new ServerInfo();
         serverInfo.setGroupName(serverMethodInfo.getGroupName());
         serverInfo.setInterfaceName(serverMethodInfo.getInterfaceName());
@@ -130,9 +138,6 @@ public class HttpGenericProxyFactory {
         parameterInfo.setIndex(0);
         parameterInfo.setType(com.hangu.common.entity.HttpServletRequest.class);
 
-        com.hangu.common.entity.HttpServletRequest apiRequest = HttpGenericProxyFactory.buildRequest(request);
-        parameterInfo.setValue(apiRequest);
-
         List<ParameterInfo> factParameterInfoList = Collections.singletonList(parameterInfo);
         providedMethodInfo.setFactParameterInfoList(factParameterInfoList);
 
@@ -142,7 +147,7 @@ public class HttpGenericProxyFactory {
         return requestHandlerInfo;
     }
 
-    private static com.hangu.common.entity.HttpServletRequest buildRequest(HttpServletRequest request)
+    public static com.hangu.common.entity.HttpServletRequest buildRequest(HttpServletRequest request)
         throws Exception {
         com.hangu.common.entity.HttpServletRequest apiReqest = new com.hangu.common.entity.HttpServletRequest();
         apiReqest.setMethod(request.getMethod());
@@ -169,5 +174,60 @@ public class HttpGenericProxyFactory {
         apiReqest.setHeads(header);
 
         return apiReqest;
+    }
+
+    public static com.hangu.common.entity.HttpServletRequest buildRequest(FullHttpRequest request)
+        throws Exception {
+        com.hangu.common.entity.HttpServletRequest apiReqest = new com.hangu.common.entity.HttpServletRequest();
+        apiReqest.setMethod(request.method().name());
+        apiReqest.setURI(request.uri());
+        apiReqest.setGetParam(getRequestParams(request));
+        ByteBuf content = request.content();
+        if(content.isReadable() && CommonUtils.isApplicationJson(request)) {
+            byte[] bytes = new byte[content.capacity()];
+            request.content().readBytes(bytes);
+            apiReqest.setBodyData(bytes);
+        }
+
+        Iterator<Entry<String, String>> iterator = request.headers().iteratorAsString();
+        Map<String, String> header = Maps.newHashMap();
+        while (iterator.hasNext()) {
+            Entry<String, String> entry = iterator.next();
+            header.put(entry.getKey().toLowerCase(), entry.getValue());
+        }
+
+        apiReqest.setHeads(header);
+
+        return apiReqest;
+    }
+
+    private static void getUriRequestParams(FullHttpRequest request, Map<String, String[]> params) {
+        QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
+        Map<String, List<String>> parameters = Optional.ofNullable(decoder.parameters())
+            .orElse(Collections.emptyMap());
+        parameters.forEach((k, v) -> {
+            params.put(k, v.toArray(new String[0]));
+        });
+    }
+
+    private static Map<String, String[]> getRequestParams(FullHttpRequest request) {
+        Map<String, String[]> params = new HashMap<>();
+        getMultipartRequestParams(request, params);
+        getUriRequestParams(request, params);
+        return params;
+    }
+
+    private static void getMultipartRequestParams(FullHttpRequest request, Map<String, String[]> params) {
+
+        // 只对 multipart/form-data 提交类型有效
+        HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(new DefaultHttpDataFactory(false), request);
+        List<InterfaceHttpData> httpPostData = decoder.getBodyHttpDatas();
+
+        for (InterfaceHttpData data : httpPostData) {
+            if (data.getHttpDataType() == InterfaceHttpData.HttpDataType.Attribute) {
+                MemoryAttribute attribute = (MemoryAttribute) data;
+                params.put(attribute.getName(), new String[] {attribute.getValue()});
+            }
+        }
     }
 }

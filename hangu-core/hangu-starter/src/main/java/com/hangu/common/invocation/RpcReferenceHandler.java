@@ -99,9 +99,7 @@ public class RpcReferenceHandler implements InvocationHandler {
         List<ParameterInfo> factParameterInfoList = Optional.ofNullable(methodInfo.getFactParameterInfoList())
             .orElse(Collections.emptyList())
             .stream().map(type -> {
-                if(Objects.isNull(type.getValue())) {
-                    type.setValue(args[type.getIndex()]);
-                }
+                type.setValue(args[type.getIndex()]);
                 return type;
             }).collect(Collectors.toList());
 
