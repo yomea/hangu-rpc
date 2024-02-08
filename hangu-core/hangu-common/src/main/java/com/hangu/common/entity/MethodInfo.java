@@ -14,9 +14,21 @@ import lombok.Data;
 public class MethodInfo {
 
     /**
+     * 使用了哪种方式去调用该方法，目前就两种
+     * true：客户端是通过 http 访问的
+     * false：客户端是按照正常 rpc 调用的
+     */
+    private boolean http;
+
+    /**
      * 方法名
      */
     private String name;
+
+    /**
+     * 方法签名 methodName(参数)
+     */
+    private String sign;
 
     /**
      * 实际参数类型
@@ -41,6 +53,4 @@ public class MethodInfo {
      * 回调函数
      */
     private RpcResponseCallback callback;
-
-    private Method method;
 }

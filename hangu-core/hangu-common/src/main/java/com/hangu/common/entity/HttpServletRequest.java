@@ -15,5 +15,6 @@ public class HttpServletRequest implements Serializable {
     private Map<String, String> heads;
     private Map<String, String[]> getParam;
     private byte[] bodyData;
+    // /groupName/version/interfaceName/methodName/generic/api
     private String URI;
 }

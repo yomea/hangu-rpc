@@ -1,13 +1,14 @@
 package com.hangu.provider.listener;
 
 import com.hangu.common.entity.RegistryInfo;
-import com.hangu.common.registry.RegistryService;
 import com.hangu.common.manager.HanguRpcManager;
 import com.hangu.common.properties.HanguProperties;
+import com.hangu.common.registry.RegistryService;
 import com.hangu.common.util.CommonUtils;
 import com.hangu.provider.annotation.HanguService;
 import com.hangu.provider.invoker.RpcInvoker;
 import com.hangu.provider.manager.LocalServiceManager;
+import com.hangu.provider.resolver.MethodArgumentResolverHandler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -29,6 +30,9 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
 
     @Autowired
     private HanguProperties hanguProperties;
+
+    @Autowired(required = false)
+    private MethodArgumentResolverHandler resolverHandler;
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
@@ -59,8 +63,7 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
                 interfaceNameList.add(interfaceName);
             }
             String version = hanguService.version();
-            RpcInvoker rpcInvoker = new RpcInvoker();
-            rpcInvoker.setService(service);
+            RpcInvoker rpcInvoker = new RpcInvoker(service, resolverHandler);
             interfaceNameList.stream().forEach(intName -> {
                 String key = CommonUtils.createServiceKey(groupName, intName, version);
                 // export service

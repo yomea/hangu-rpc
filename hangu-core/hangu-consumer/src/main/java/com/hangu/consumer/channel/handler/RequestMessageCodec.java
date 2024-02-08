@@ -109,7 +109,6 @@ public class RequestMessageCodec extends MessageToMessageCodec<ByteBuf, Request>
         Long id = byteBuf.readLong();
         byte serialType = (byte) (hanguCons.SERIALIZATION_MARK & msgType);
         try {
-            System.err.println(requstFlag);
             if ((MsgTypeMarkEnum.HEART_FLAG.getMark() & msgType) != 0) {
 
                 PingPong pingPong = this.dealHeart(id, serialType);

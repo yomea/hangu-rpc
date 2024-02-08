@@ -18,6 +18,8 @@ import java.lang.annotation.Target;
 @Documented
 public @interface HanguMethod {
 
+    boolean http() default false;
+
     /**
      * 超时时间，默认5s
      */

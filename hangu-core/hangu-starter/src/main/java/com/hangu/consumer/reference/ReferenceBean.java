@@ -37,7 +37,7 @@ public class ReferenceBean<T> {
 
     private Class<T> interfaceClass;
 
-    private Map<Method, MethodInfo> methodInfoCache;
+    private Map<String, MethodInfo> methodInfoCache;
 
     private ConnectManager connectManager;
 
@@ -82,63 +82,70 @@ public class ReferenceBean<T> {
 
     private void buildMethodInfoCache() {
 
-        Method[] methods = interfaceClass.getMethods();
-        methodInfoCache = Arrays.stream(methods).map(method -> {
+        MethodInfo methodInfo = this.requestHandlerInfo.getProvidedMethodInfo();
+        if (Objects.isNull(methodInfo)) {
+            Method[] methods = interfaceClass.getMethods();
+            this.methodInfoCache = Arrays.stream(methods).map(method -> {
 
-            MethodInfo info = new MethodInfo();
-            info.setMethod(method);
-            info.setName(method.getName());
-            info.setCallType(MethodCallTypeEnum.SYNC.getType());
-            info.setTimeout(5);
-            info.setCallback(null);
+                MethodInfo info = new MethodInfo();
+                info.setHttp(false);
+                info.setName(method.getName());
+                info.setCallType(MethodCallTypeEnum.SYNC.getType());
+                info.setTimeout(5);
+                info.setCallback(null);
 
-            Class<?>[] parameterTypes = method.getParameterTypes();
-            List<ParameterInfo> callbackParameterInfoList = new ArrayList<>();
-            List<ParameterInfo> factParameterInfoList = new ArrayList<>();
-            for (int index = 0; index < parameterTypes.length; index++) {
-                Class<?> parameterType = parameterTypes[index];
-                ParameterInfo parameterInfo = new ParameterInfo();
-                parameterInfo.setIndex(index);
-                parameterInfo.setType(parameterType);
-                if (RpcResponseCallback.class.isAssignableFrom(parameterType)) {
-                    info.setCallType(MethodCallTypeEnum.ASYNC_PARAMETER.getType());
-                    callbackParameterInfoList.add(parameterInfo);
-                } else {
-                    factParameterInfoList.add(parameterInfo);
+                Class<?>[] parameterTypes = method.getParameterTypes();
+                String argsName = Arrays.stream(parameterTypes).map(Class::getName)
+                    .collect(Collectors.joining(","));
+                info.setSign(method.getName() + "(" + argsName + ")");
+                List<ParameterInfo> callbackParameterInfoList = new ArrayList<>();
+                List<ParameterInfo> factParameterInfoList = new ArrayList<>();
+                for (int index = 0; index < parameterTypes.length; index++) {
+                    Class<?> parameterType = parameterTypes[index];
+                    ParameterInfo parameterInfo = new ParameterInfo();
+                    parameterInfo.setIndex(index);
+                    parameterInfo.setType(parameterType);
+                    if (RpcResponseCallback.class.isAssignableFrom(parameterType)) {
+                        info.setCallType(MethodCallTypeEnum.ASYNC_PARAMETER.getType());
+                        callbackParameterInfoList.add(parameterInfo);
+                    } else {
+                        factParameterInfoList.add(parameterInfo);
+                    }
                 }
-            }
-            info.setFactParameterInfoList(factParameterInfoList);
-            info.setCallbackParameterInfoList(callbackParameterInfoList);
-            // 注解优先级更高
-            HanguMethod hanguMethod = method.getAnnotation(HanguMethod.class);
-            if (Objects.nonNull(hanguMethod)) {
-                int timeout = hanguMethod.timeout();
-                if (timeout <= 0) {
-                    throw new RpcParseException(ErrorCodeEnum.FAILURE.getCode(),
-                        this.msgPrefix(method) + "超时时间必须是大于零数字！");
-                }
+                info.setFactParameterInfoList(factParameterInfoList);
+                info.setCallbackParameterInfoList(callbackParameterInfoList);
+                // 注解优先级更高
+                HanguMethod hanguMethod = method.getAnnotation(HanguMethod.class);
+                if (Objects.nonNull(hanguMethod)) {
+                    int timeout = hanguMethod.timeout();
+                    if (timeout <= 0) {
+                        throw new RpcParseException(ErrorCodeEnum.FAILURE.getCode(),
+                            this.msgPrefix(method) + "超时时间必须是大于零数字！");
+                    }
 
-                Class<? extends RpcResponseCallback> callbackClass = hanguMethod.callback();
-                if (Objects.isNull(CommonUtils.getConstructor(callbackClass))) {
-                    throw new RpcParseException(ErrorCodeEnum.FAILURE.getCode(),
-                        this.msgPrefix(method) + "回调函数没有默认构造器！");
+                    Class<? extends RpcResponseCallback> callbackClass = hanguMethod.callback();
+                    if (Objects.isNull(CommonUtils.getConstructor(callbackClass))) {
+                        throw new RpcParseException(ErrorCodeEnum.FAILURE.getCode(),
+                            this.msgPrefix(method) + "回调函数没有默认构造器！");
+                    }
+                    try {
+                        RpcResponseCallback callback = CommonUtils.getConstructor(callbackClass)
+                            .newInstance();
+                        info.setCallType(MethodCallTypeEnum.ASYNC_SPECIFY.getType());
+                        info.setTimeout(hanguMethod.timeout());
+                        info.setCallback(callback);
+                        info.setHttp(hanguMethod.http());
+                    } catch (InstantiationException e) {
+                        throw new RuntimeException(e);
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    } catch (InvocationTargetException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-                try {
-                    RpcResponseCallback callback = CommonUtils.getConstructor(callbackClass)
-                        .newInstance();
-                    info.setCallType(MethodCallTypeEnum.ASYNC_SPECIFY.getType());
-                    info.setTimeout(hanguMethod.timeout());
-                    info.setCallback(callback);
-                } catch (InstantiationException e) {
-                    throw new RuntimeException(e);
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                } catch (InvocationTargetException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            return info;
-        }).collect(Collectors.toMap(MethodInfo::getMethod, Function.identity()));
+                return info;
+            }).collect(Collectors.toMap(MethodInfo::getSign, Function.identity()));
+        }
     }
 
     private String msgPrefix(Method method) {

@@ -4,6 +4,7 @@ import com.hangu.common.entity.ServerInfo;
 import com.hangu.common.registry.RegistryService;
 import com.hangu.provider.export.ServiceBean;
 import com.hangu.provider.export.ServiceExporter;
+import com.hangu.provider.resolver.MethodArgumentResolverHandler;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ public class ServiceFactoryBean<T> implements FactoryBean<T>, InitializingBean {
 
     @Autowired
     private RegistryService registryService;
+
+    @Autowired(required = false)
+    private MethodArgumentResolverHandler methodArgumentResolverHandler;
 
     public ServiceFactoryBean(ServerInfo serverInfo,
         Class<T> interfaceClass, T service) {
@@ -44,7 +48,7 @@ public class ServiceFactoryBean<T> implements FactoryBean<T>, InitializingBean {
     public void afterPropertiesSet() throws Exception {
 
         ServiceBean<T> serviceBean =
-            new ServiceBean<>(serverInfo, interfaceClass, service, registryService);
+            new ServiceBean<>(serverInfo, interfaceClass, service, registryService, methodArgumentResolverHandler);
         ServiceExporter.export(serviceBean);
     }
 }

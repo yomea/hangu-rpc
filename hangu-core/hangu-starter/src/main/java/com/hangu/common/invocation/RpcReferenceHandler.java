@@ -21,12 +21,14 @@ import com.hangu.common.exception.RpcInvokerTimeoutException;
 import com.hangu.common.manager.ConnectManager;
 import com.hangu.common.manager.HanguRpcManager;
 import com.hangu.common.util.CommonUtils;
+import com.hangu.common.util.DescClassUtils;
 import com.hangu.consumer.client.ClientConnect;
 import com.hangu.consumer.client.NettyClient;
 import com.hangu.consumer.manager.RpcRequestManager;
 import io.netty.channel.Channel;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -47,11 +49,11 @@ public class RpcReferenceHandler implements InvocationHandler {
 
     private ConnectManager connectManager;
 
-    private Map<Method, MethodInfo> methodInfoCache;
+    private Map<String, MethodInfo> methodInfoCache;
 
     public RpcReferenceHandler(RequestHandlerInfo requestHandlerInfo,
         ConnectManager connectManager,
-        Map<Method, MethodInfo> methodInfoCache) {
+        Map<String, MethodInfo> methodInfoCache) {
         this.requestHandlerInfo = requestHandlerInfo;
         this.connectManager = connectManager;
         this.methodInfoCache = methodInfoCache;
@@ -79,11 +81,13 @@ public class RpcReferenceHandler implements InvocationHandler {
         }
         // 连接
         Channel channel = connect.getChannel();
-
-        MethodInfo methodInfo = methodInfoCache.get(method);
+        MethodInfo providedMethodInfo = this.requestHandlerInfo.getProvidedMethodInfo();
+        MethodInfo methodInfo = Objects.nonNull(providedMethodInfo)
+            ? providedMethodInfo
+            : methodInfoCache.get(DescClassUtils.methodSigName(method));
 
         Request request = new Request();
-        request.setHttp(requestHandlerInfo.isHttp());
+        request.setHttp(methodInfo.isHttp());
         request.setId(CommonUtils.snowFlakeNextId());
         request.setSerializationType(SerializationTypeEnum.HESSIAN.getType());
 
@@ -91,21 +95,16 @@ public class RpcReferenceHandler implements InvocationHandler {
         invokerTransport.setGroupName(serverInfo.getGroupName());
         invokerTransport.setInterfaceName(serverInfo.getInterfaceName());
         invokerTransport.setVersion(serverInfo.getVersion());
-        invokerTransport.setMethodName(
-            requestHandlerInfo.isHttp() ? requestHandlerInfo.getMethodName() : methodInfo.getName());
+        invokerTransport.setMethodName(methodInfo.getName());
 
         List<ParameterInfo> factParameterInfoList = Optional.ofNullable(methodInfo.getFactParameterInfoList())
             .orElse(Collections.emptyList())
             .stream().map(type -> {
-                ParameterInfo parameterInfo = new ParameterInfo();
-                parameterInfo.setType(type.getType());
-                parameterInfo.setIndex(type.getIndex());
-                parameterInfo.setValue(args[type.getIndex()]);
-                return parameterInfo;
+                if(Objects.isNull(type.getValue())) {
+                    type.setValue(args[type.getIndex()]);
+                }
+                return type;
             }).collect(Collectors.toList());
-        for (ParameterInfo parameterInfo : factParameterInfoList) {
-            parameterInfo.setValue(args[parameterInfo.getIndex()]);
-        }
 
         invokerTransport.setParameterInfos(factParameterInfoList);
         request.setInvokerTransport(invokerTransport);

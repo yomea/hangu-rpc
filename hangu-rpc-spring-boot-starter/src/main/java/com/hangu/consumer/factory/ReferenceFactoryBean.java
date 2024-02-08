@@ -47,7 +47,6 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
     @Override
     public void afterPropertiesSet() throws Exception {
         RequestHandlerInfo requestHandlerInfo = new RequestHandlerInfo();
-        requestHandlerInfo.setHttp(false);
         requestHandlerInfo.setServerInfo(this.serverInfo);
         ReferenceBean<T> referenceBean = new ReferenceBean<>(requestHandlerInfo, this.interfaceClass, registryService,
             hanguProperties);

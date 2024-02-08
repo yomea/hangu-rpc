@@ -1,10 +1,15 @@
 package com.hangu.common.util;
 
+import com.hangu.common.entity.MethodInfo;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.ClassUtils;
 
 /**
@@ -125,5 +130,12 @@ public final class DescClassUtils {
         } else {
             return null;
         }
+    }
+
+    public static String methodSigName(Method method) {
+        String methodName = method.getName();
+        String argsSing = Arrays.stream(Optional.ofNullable(method.getParameterTypes()).orElse(new Class<?>[0]))
+            .map(Class::getName).collect(Collectors.joining(","));
+        return methodName + "(" + argsSing + ")";
     }
 }

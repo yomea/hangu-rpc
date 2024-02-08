@@ -7,6 +7,8 @@ import com.hangu.common.registry.RegistryService;
 import com.hangu.common.util.CommonUtils;
 import com.hangu.provider.invoker.RpcInvoker;
 import com.hangu.provider.manager.LocalServiceManager;
+import com.hangu.provider.resolver.MethodArgumentResolverHandler;
+import java.util.Objects;
 
 /**
  * @author wuzhenhong
@@ -22,30 +24,43 @@ public class ServiceBean<T> {
 
     private RegistryService registryService;
 
+    private MethodArgumentResolverHandler methodArgumentResolverHandler;
+
     public ServiceBean(ServerInfo serverInfo,
         Class<T> interfaceClass, T service, RegistryService registryService) {
         this.serverInfo = serverInfo;
         this.interfaceClass = interfaceClass;
         this.service = service;
         this.registryService = registryService;
+        this.methodArgumentResolverHandler = MethodArgumentResolverHandler.DEFAULT_RESOLVER;
+    }
+
+    public ServiceBean(ServerInfo serverInfo,
+        Class<T> interfaceClass, T service, RegistryService registryService, MethodArgumentResolverHandler methodArgumentResolverHandler) {
+        this.serverInfo = serverInfo;
+        this.interfaceClass = interfaceClass;
+        this.service = service;
+        this.registryService = registryService;
+        this.methodArgumentResolverHandler = Objects.isNull(methodArgumentResolverHandler)
+        ? MethodArgumentResolverHandler.DEFAULT_RESOLVER
+        : methodArgumentResolverHandler;
     }
 
     public void init() {
 
-        String key = CommonUtils.createServiceKey(serverInfo);
-        RpcInvoker rpcInvoker = new RpcInvoker();
-        rpcInvoker.setService(service);
+        String key = CommonUtils.createServiceKey(this.serverInfo);
+        RpcInvoker rpcInvoker = new RpcInvoker(this.service, this.methodArgumentResolverHandler);
         // export service
         // step 1.0 本地暴露
         LocalServiceManager.register(key, rpcInvoker);
 
         // step 2.0 远程暴露
         RegistryInfo registryInfo = new RegistryInfo();
-        registryInfo.setGroupName(serverInfo.getGroupName());
-        registryInfo.setInterfaceName(serverInfo.getInterfaceName());
-        registryInfo.setVersion(serverInfo.getVersion());
+        registryInfo.setGroupName(this.serverInfo.getGroupName());
+        registryInfo.setInterfaceName(this.serverInfo.getInterfaceName());
+        registryInfo.setVersion(this.serverInfo.getVersion());
         registryInfo.setHostInfo(HanguRpcManager.getLocalHost());
-        registryService.register(registryInfo);
+        this.registryService.register(registryInfo);
     }
 
 }
