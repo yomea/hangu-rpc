@@ -4,7 +4,7 @@ import cn.hutool.json.JSONUtil;
 import com.hangu.common.entity.HttpServletRequest;
 import com.hangu.common.enums.ErrorCodeEnum;
 import com.hangu.common.exception.RpcInvokerException;
-import com.hangu.common.util.CommonUtils;
+import com.hangu.common.util.HttpGenericInvokeUtils;
 import com.hangu.provider.resolver.MethodArgumentResolver;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import java.io.UnsupportedEncodingException;
@@ -22,7 +22,7 @@ public class JsonMethodArgumentResolver implements MethodArgumentResolver {
     @Override
     public boolean support(Parameter parameter, HttpServletRequest httpServletRequest) {
         String contentType = StringUtils.trimToEmpty(httpServletRequest.getHeads().get("content-type"));
-        String[] headerArr = CommonUtils.splitHeaderContentType(contentType);
+        String[] headerArr = HttpGenericInvokeUtils.splitHeaderContentType(contentType);
         Class<?> type = parameter.getType();
         byte[] bodyData = httpServletRequest.getBodyData();
         return !ClassUtils.isPrimitiveOrWrapper(type)

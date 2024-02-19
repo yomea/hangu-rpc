@@ -10,7 +10,7 @@ import com.hangu.common.enums.MethodCallTypeEnum;
 import com.hangu.common.exception.RpcInvokerException;
 import com.hangu.common.properties.HanguProperties;
 import com.hangu.common.registry.RegistryService;
-import com.hangu.common.util.CommonUtils;
+import com.hangu.common.util.HttpGenericInvokeUtils;
 import com.hangu.consumer.reference.ReferenceBean;
 import com.hangu.consumer.reference.ServiceReference;
 import com.hangu.entity.ServerMethodInfo;
@@ -183,7 +183,7 @@ public class HttpGenericProxyFactory {
         apiReqest.setURI(request.uri());
         apiReqest.setGetParam(getRequestParams(request));
         ByteBuf content = request.content();
-        if(content.isReadable() && CommonUtils.isApplicationJson(request)) {
+        if(content.isReadable() && HttpGenericInvokeUtils.isApplicationJson(request)) {
             byte[] bytes = new byte[content.capacity()];
             request.content().readBytes(bytes);
             apiReqest.setBodyData(bytes);
