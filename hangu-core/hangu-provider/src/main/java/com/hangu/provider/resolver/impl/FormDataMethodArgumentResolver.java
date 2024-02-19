@@ -1,6 +1,7 @@
 package com.hangu.provider.resolver.impl;
 
 import com.hangu.common.entity.HttpServletRequest;
+import com.hangu.common.entity.HttpServletResponse;
 import com.hangu.provider.binder.WebDataBinder;
 import com.hangu.provider.resolver.AbstractMethodArgumentResolver;
 import java.lang.reflect.Constructor;
@@ -26,7 +27,7 @@ public class FormDataMethodArgumentResolver extends AbstractMethodArgumentResolv
     }
 
     @Override
-    public boolean support(Parameter parameter, HttpServletRequest httpServletRequest) {
+    public boolean support(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         String contentType = StringUtils.trimToEmpty(httpServletRequest.getHeads().get("content-type"));
         Class<?> type = parameter.getType();
         return !ClassUtils.isPrimitiveOrWrapper(type)
@@ -36,7 +37,7 @@ public class FormDataMethodArgumentResolver extends AbstractMethodArgumentResolv
     }
 
     @Override
-    public Object resolver(Parameter parameter, HttpServletRequest httpServletRequest) {
+    public Object resolver(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
         Constructor<?> ctor = BeanUtils.getResolvableConstructor(parameter.getType());
         Object target = BeanUtils.instantiateClass(ctor);

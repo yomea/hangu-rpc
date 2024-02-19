@@ -1,6 +1,7 @@
 package com.hangu.provider.resolver.impl;
 
 import com.hangu.common.entity.HttpServletRequest;
+import com.hangu.common.entity.HttpServletResponse;
 import com.hangu.common.util.DescClassUtils;
 import com.hangu.provider.resolver.AbstractMethodArgumentResolver;
 import java.lang.reflect.Parameter;
@@ -22,13 +23,13 @@ public class PrimitiveMethodArgumentResolver extends AbstractMethodArgumentResol
     }
 
     @Override
-    public boolean support(Parameter parameter, HttpServletRequest httpServletRequest) {
+    public boolean support(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         Class<?> type = parameter.getType();
         return ClassUtils.isPrimitiveOrWrapper(type) || type == String.class;
     }
 
     @Override
-    public Object resolver(Parameter parameter, HttpServletRequest httpServletRequest) {
+    public Object resolver(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         String name = parameter.getName();
         Class<?> type = parameter.getType();
         Map<String, String[]> getParam = Optional.ofNullable(httpServletRequest.getGetParam())

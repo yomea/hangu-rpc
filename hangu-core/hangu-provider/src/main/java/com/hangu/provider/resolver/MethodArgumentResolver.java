@@ -1,6 +1,7 @@
 package com.hangu.provider.resolver;
 
 import com.hangu.common.entity.HttpServletRequest;
+import com.hangu.common.entity.HttpServletResponse;
 import java.lang.reflect.Parameter;
 
 /**
@@ -9,7 +10,7 @@ import java.lang.reflect.Parameter;
  */
 public interface MethodArgumentResolver {
 
-    boolean support(Parameter parameter, HttpServletRequest httpServletRequest);
+    boolean support(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse);
 
-    Object resolver(Parameter parameter, HttpServletRequest httpServletRequest);
+    Object resolver(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse);
 }

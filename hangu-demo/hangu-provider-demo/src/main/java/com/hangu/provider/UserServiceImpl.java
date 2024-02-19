@@ -1,9 +1,13 @@
 package com.hangu.provider;
 
+import com.hangu.common.entity.HttpServletRequest;
+import com.hangu.common.entity.HttpServletResponse;
 import com.hangu.consumer.UserService;
 import com.hangu.entity.Address;
 import com.hangu.entity.UserInfo;
 import com.hangu.provider.annotation.HanguService;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -68,6 +72,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserInfo yyy(UserInfo userInfo) {
+        return userInfo;
+    }
+
+    @Override
+    public UserInfo zzz(UserInfo userInfo, HttpServletRequest request, HttpServletResponse response) {
+
+        response.addHeader("Content-Disposition", "attachment;filename=xx.txt");
+        response.addHeader(HttpHeaderNames.CONTENT_TYPE.toString(), "application/vnd.ms-excel");
+        response.setBodyData("hello world!".getBytes(StandardCharsets.UTF_8));
         return userInfo;
     }
 }

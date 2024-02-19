@@ -1,5 +1,6 @@
 package com.hangu.controller;
 
+import com.hangu.common.entity.HttpServletResponse;
 import com.hangu.common.properties.HanguProperties;
 import com.hangu.common.registry.RegistryService;
 import com.hangu.consumer.UserService;
@@ -8,8 +9,10 @@ import com.hangu.consumer.http.HttpGenericService;
 import com.hangu.entity.UserInfo;
 import com.hangu.provider.binder.WebDataBinder;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,10 +91,15 @@ public class UserController {
     }
 
     @GetMapping("/{interfaceName}/{methodName}/generic/api")
-    public String h(HttpServletRequest request) throws Exception {
+    public void h(HttpServletRequest request, javax.servlet.http.HttpServletResponse response) throws Exception {
         com.hangu.common.entity.HttpServletRequest apiRequest = HttpGenericProxyFactory.buildRequest(request);
         HttpGenericService httpProxy = HttpGenericProxyFactory.httpProxy(request.getRequestURI(), registryService, hanguProperties);
-        return httpProxy.http(apiRequest);
+        HttpServletResponse apiResponse = httpProxy.http(apiRequest);
+        Optional.ofNullable(apiResponse.getHeads())
+                .orElse(Collections.emptyMap()).forEach(response::addHeader);
+        response.getOutputStream().write(apiResponse.getBodyData());
+        response.getOutputStream().flush();
+        response.getOutputStream().close();
     }
 
 

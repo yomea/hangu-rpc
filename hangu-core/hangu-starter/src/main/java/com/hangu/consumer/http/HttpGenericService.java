@@ -1,6 +1,7 @@
 package com.hangu.consumer.http;
 
 import com.hangu.common.entity.HttpServletRequest;
+import com.hangu.common.entity.HttpServletResponse;
 
 /**
  * http泛化调用
@@ -9,5 +10,5 @@ import com.hangu.common.entity.HttpServletRequest;
  */
 public interface HttpGenericService {
 
-   String http(HttpServletRequest request);
+   HttpServletResponse http(HttpServletRequest request);
 }

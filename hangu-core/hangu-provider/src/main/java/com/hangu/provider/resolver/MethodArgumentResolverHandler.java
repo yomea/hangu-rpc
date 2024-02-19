@@ -1,11 +1,13 @@
 package com.hangu.provider.resolver;
 
 import com.hangu.common.entity.HttpServletRequest;
+import com.hangu.common.entity.HttpServletResponse;
 import com.hangu.common.enums.ErrorCodeEnum;
 import com.hangu.common.exception.RpcInvokerException;
 import com.hangu.provider.resolver.impl.FormDataMethodArgumentResolver;
 import com.hangu.provider.resolver.impl.JsonMethodArgumentResolver;
 import com.hangu.provider.resolver.impl.PrimitiveMethodArgumentResolver;
+import com.hangu.provider.resolver.impl.RequestResponseMethodArgumentResolver;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,10 +34,10 @@ public class MethodArgumentResolverHandler {
         this.conversionService = conversionService;
     }
 
-    public Object resolver(Parameter parameter, HttpServletRequest httpServletRequest) {
+    public Object resolver(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         for (MethodArgumentResolver resolver : resolverList) {
-            if (resolver.support(parameter, httpServletRequest)) {
-                return resolver.resolver(parameter, httpServletRequest);
+            if (resolver.support(parameter, httpServletRequest, httpServletResponse)) {
+                return resolver.resolver(parameter, httpServletRequest, httpServletResponse);
             }
         }
         throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(),
@@ -44,6 +46,7 @@ public class MethodArgumentResolverHandler {
     }
 
     private void addDefaultResolvers() {
+        this.resolverList.add(new RequestResponseMethodArgumentResolver());
         this.resolverList.add(new PrimitiveMethodArgumentResolver(this.conversionService));
         this.resolverList.add(new JsonMethodArgumentResolver());
         this.resolverList.add(new FormDataMethodArgumentResolver(this.conversionService));

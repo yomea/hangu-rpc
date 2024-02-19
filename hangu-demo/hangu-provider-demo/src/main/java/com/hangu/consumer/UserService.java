@@ -1,5 +1,7 @@
 package com.hangu.consumer;
 
+import com.hangu.common.entity.HttpServletRequest;
+import com.hangu.common.entity.HttpServletResponse;
 import com.hangu.entity.Address;
 import com.hangu.entity.UserInfo;
 import java.util.List;
@@ -24,4 +26,6 @@ public interface UserService {
 
     UserInfo xxx(String name, int age);
     UserInfo yyy(UserInfo userInfo);
+
+    UserInfo zzz(UserInfo userInfo, HttpServletRequest request, HttpServletResponse response);
 }

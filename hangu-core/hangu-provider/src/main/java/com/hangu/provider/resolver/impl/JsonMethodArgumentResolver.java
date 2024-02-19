@@ -2,6 +2,7 @@ package com.hangu.provider.resolver.impl;
 
 import cn.hutool.json.JSONUtil;
 import com.hangu.common.entity.HttpServletRequest;
+import com.hangu.common.entity.HttpServletResponse;
 import com.hangu.common.enums.ErrorCodeEnum;
 import com.hangu.common.exception.RpcInvokerException;
 import com.hangu.common.util.HttpGenericInvokeUtils;
@@ -20,7 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 public class JsonMethodArgumentResolver implements MethodArgumentResolver {
 
     @Override
-    public boolean support(Parameter parameter, HttpServletRequest httpServletRequest) {
+    public boolean support(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         String contentType = StringUtils.trimToEmpty(httpServletRequest.getHeads().get("content-type"));
         String[] headerArr = HttpGenericInvokeUtils.splitHeaderContentType(contentType);
         Class<?> type = parameter.getType();
@@ -32,7 +33,7 @@ public class JsonMethodArgumentResolver implements MethodArgumentResolver {
     }
 
     @Override
-    public Object resolver(Parameter parameter, HttpServletRequest httpServletRequest) {
+    public Object resolver(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         byte[] bodyData = httpServletRequest.getBodyData();
         try {
             String jsonData = new String(bodyData, "UTF-8");
