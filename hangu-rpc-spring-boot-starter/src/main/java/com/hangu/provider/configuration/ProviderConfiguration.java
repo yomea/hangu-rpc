@@ -8,9 +8,12 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.web.format.DateTimeFormatters;
+import org.springframework.boot.autoconfigure.web.format.WebConversionService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.format.support.FormattingConversionService;
 
 /**
@@ -26,7 +29,12 @@ public class ProviderConfiguration {
 
     @Bean
     public ConversionService customerConversionService() {
-        FormattingConversionService conversionService = new FormattingConversionService();
+        DateTimeFormatters dateTimeFormatters = new DateTimeFormatters()
+            .dateTimeFormat("yyyy-MM-dd HH:mm:ss")
+            .dateFormat("yyyy-MM-dd")
+            .timeFormat("HH:mm:ss");
+        dateTimeFormatters.dateFormat("yyyy-MM-dd");
+        ConfigurableConversionService conversionService = new WebConversionService(dateTimeFormatters);
 //        conversionService.addConverter(new StringToCharConverter());
         return conversionService;
     }
