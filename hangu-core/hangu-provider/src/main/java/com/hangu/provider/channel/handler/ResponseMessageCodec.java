@@ -18,6 +18,7 @@ import com.hangu.common.util.DescClassUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
+import io.netty.util.Attribute;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -112,6 +113,12 @@ public class ResponseMessageCodec extends MessageToMessageCodec<ByteBuf, Respons
                 e.getClass(), e);
             ctx.channel().writeAndFlush(response);
             throw e;
+        } finally {
+            Attribute<Request> requestAttribute = ctx.channel().attr(hanguCons.REQUEST_ATTRIBUTE_KEY);
+            Request request = new Request();
+            request.setId(id);
+            request.setSerializationType(serialType);
+            requestAttribute.set(request);
         }
     }
 

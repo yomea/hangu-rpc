@@ -3,6 +3,7 @@ package com.hangu.provider.server;
 import com.hangu.common.constant.hanguCons;
 import com.hangu.common.handler.ByteFrameDecoder;
 import com.hangu.common.handler.HeartBeatEncoder;
+import com.hangu.provider.channel.handler.GlobalExceptionHandler;
 import com.hangu.provider.channel.handler.HeartBeatPingHandler;
 import com.hangu.provider.channel.handler.RequestMessageHandler;
 import com.hangu.provider.channel.handler.ResponseMessageCodec;
@@ -43,6 +44,7 @@ public class NettyServer {
         worker = new NioEventLoopGroup(hanguCons.DEF_IO_THREADS);
         try {
             LoggingHandler loggingHandler = new LoggingHandler(LogLevel.INFO);
+            GlobalExceptionHandler exceptionHandler = new GlobalExceptionHandler();
             serverBootstrap = new ServerBootstrap();
             serverBootstrap.channel(NioServerSocketChannel.class)
                 .group(boss, worker)
@@ -66,7 +68,8 @@ public class NettyServer {
                             // 心跳处理器
                             .addLast(new HeartBeatPingHandler())
                             // 请求事件处理器，用于调用业务逻辑
-                            .addLast(new RequestMessageHandler(executor));
+                            .addLast(new RequestMessageHandler(executor))
+                            .addLast(exceptionHandler);
                     }
                 });
             channel = serverBootstrap.bind(properties.getPort()).addListener(future -> {

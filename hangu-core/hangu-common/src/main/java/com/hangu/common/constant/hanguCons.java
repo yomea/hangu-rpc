@@ -1,5 +1,8 @@
 package com.hangu.common.constant;
 
+import com.hangu.common.entity.Request;
+import io.netty.util.AttributeKey;
+
 /**
  * @author wuzhenhong
  * @date 2023/7/31 15:53
@@ -19,4 +22,8 @@ public final class hanguCons {
     public static final int DEF_IO_THREADS = Math.min(Runtime.getRuntime().availableProcessors() + 1, 32);
 
     public static final int CPUS = Runtime.getRuntime().availableProcessors();
+
+    public static final AttributeKey<Request> REQUEST_ATTRIBUTE_KEY = AttributeKey.valueOf("REQUEST_ATTRIBUTE_KEY");
+
+
 }
