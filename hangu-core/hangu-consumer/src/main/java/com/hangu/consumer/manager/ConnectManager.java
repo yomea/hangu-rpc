@@ -51,7 +51,7 @@ public class ConnectManager implements RegistryNotifyListener {
     @Override
     public void registryNotify(RegistryNotifyInfo notifyInfo) {
         // 刷新本地服务列表
-        this.cacheConnect(notifyInfo.getHostInfos());
+        this.cacheRegistoryConnect(notifyInfo.getHostInfos());
 
     }
 
@@ -61,7 +61,7 @@ public class ConnectManager implements RegistryNotifyListener {
      *
      * @param hostInfoList
      */
-    private synchronized void cacheConnect(List<HostInfo> hostInfoList) {
+    private synchronized void cacheRegistoryConnect(List<HostInfo> hostInfoList) {
         // 筛选出活着的通道
         List<ClientConnect> activeChannelList = this.KEY_CHANNELS.stream().filter(ClientConnect::isActive)
             .collect(Collectors.toList());
@@ -70,8 +70,10 @@ public class ConnectManager implements RegistryNotifyListener {
             .collect(Collectors.toList());
         Set<HostInfo> hostInfoSet = hostInfoList.stream().collect(Collectors.toSet());
         // 如果链接已经失效并且注册中心上确实不存在该链接了，那么直接标记为释放，连重试都不需要了
+        // 这里可能会因为网络抖动被误认为该地址对应的服务下线，所以需要再下次通知的时候
+        // 主动将release修改回去
         inactiveChannelList.stream().forEach(e -> {
-            if(!hostInfoSet.contains(e.getHostInfo())) {
+            if (!hostInfoSet.contains(e.getHostInfo())) {
                 e.markRelease();
             }
         });
@@ -86,8 +88,15 @@ public class ConnectManager implements RegistryNotifyListener {
             }
             return;
         }
-        List<ClientConnect> newConnectList = hostInfoList.stream().map(ConnectManager::doCacheConnect)
-            .collect(Collectors.toList());
+        List<ClientConnect> newConnectList = hostInfoList.stream().map(hostInfo -> {
+            ClientConnect clientConnect = ConnectManager.doCacheConnect(hostInfo);
+            // 这里主要是为了解决网络抖动，误判机器下线，等网络正常时，注册中心再次通知
+            // 那么需要重新标记为true
+            if (clientConnect.isActive()) {
+                clientConnect.setRelease(false);
+            }
+            return clientConnect;
+        }).collect(Collectors.toList());
         activeChannelList.addAll(newConnectList);
         this.KEY_CHANNELS = activeChannelList;
     }
@@ -165,15 +174,15 @@ public class ConnectManager implements RegistryNotifyListener {
         try {
             ClientConnect client = hitCache(key);
             // 已被释放的不需要重连
-            if(Objects.isNull(client)) {
+            if (Objects.isNull(client)) {
                 return;
             }
             // 已激活不需要重连
-            if(client.isActive()) {
+            if (client.isActive()) {
                 return;
             }
             // 被标记为释放不需要重连
-            if(client.isRelease()) {
+            if (client.isRelease()) {
                 return;
             }
             NettyClient nettyClient = NettyClientSingleManager.getNettyClient();
@@ -208,7 +217,7 @@ public class ConnectManager implements RegistryNotifyListener {
 
     private List<HostInfo> initPullService() {
         List<HostInfo> infos = registryService.pullServers(serverInfo);
-        this.cacheConnect(infos);
+        this.cacheRegistoryConnect(infos);
         return infos;
     }
 }
