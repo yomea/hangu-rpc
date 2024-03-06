@@ -79,8 +79,10 @@ public class HeartBeatPongHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void reconnect(ChannelHandlerContext ctx) {
+
         ClientConnect clientConnect = ctx.channel()
             .attr(AttributeKey.<ClientConnect>valueOf(ctx.channel().id().asLongText())).get();
+        int retryConnectCount = clientConnect.incrConnCount();
         // N次之后还是不能连接上，放弃连接
         if(clientConnect.isRelease()) {
             return;
@@ -90,10 +92,7 @@ public class HeartBeatPongHandler extends ChannelInboundHandlerAdapter {
             return;
         }
         HostInfo hostInfo = clientConnect.getHostInfo();
-        String host = hostInfo.getHost();
-        int port = hostInfo.getPort();
-        int retryConnectCount = clientConnect.incrConnCount();
-        int delay = 2 * retryConnectCount;
+        int delay = 2 * (retryConnectCount - 1);
         // 最大延迟20秒再执行
         if(delay > 20) {
             delay = 20;
