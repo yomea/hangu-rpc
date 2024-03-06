@@ -5,6 +5,8 @@ import com.hangu.common.constant.hanguCons;
 import com.hangu.common.entity.HostInfo;
 import com.hangu.common.properties.HanguProperties;
 import com.hangu.consumer.client.NettyClient;
+import com.hangu.consumer.manager.NettyClientSingleManager;
+import com.hangu.provider.manager.NettyServerSingleManager;
 import com.hangu.provider.server.NettyServer;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -21,13 +23,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class HanguRpcManager {
 
-    private static final Object CLIENT_LOCK = new Object();
-    private static final Object SERVER_LOCK = new Object();
-
     private static final Object EXECUTOR_LOCK = new Object();
     private static final Object SCHEDULE_LOCK = new Object();
-    private static volatile NettyClient NETTY_CLIENT;
-    private static volatile NettyServer NETTY_SERVER;
 
     private static volatile ExecutorService GLOBAL_EXECUTOR;
     private static volatile ScheduledExecutorService SCHEDULE_EXECUTOR;
@@ -35,39 +32,19 @@ public class HanguRpcManager {
     private static HostInfo LOCAL_HOST;
 
     public static final NettyServer openServer(HanguProperties properties) {
-        if (Objects.nonNull(NETTY_SERVER)) {
-            return NETTY_SERVER;
-        }
         Executor executor = openIoExecutor(properties);
-        synchronized (SERVER_LOCK) {
-            if (Objects.nonNull(NETTY_SERVER)) {
-                return NETTY_SERVER;
-            }
-            NETTY_SERVER = new NettyServer();
-            NETTY_SERVER.start(properties.getProvider(), executor);
-            HostInfo hostInfo = new HostInfo();
-            hostInfo.setHost(NetUtil.getLocalhost().getHostAddress());
-            hostInfo.setPort(properties.getProvider().getPort());
-            LOCAL_HOST = hostInfo;
-        }
-
-        return NETTY_SERVER;
+        NettyServer server = NettyServerSingleManager.openServer(executor, properties.getProvider());
+        HostInfo hostInfo = new HostInfo();
+        hostInfo.setHost(NetUtil.getLocalhost().getHostAddress());
+        hostInfo.setPort(properties.getProvider().getPort());
+        LOCAL_HOST = hostInfo;
+        return server;
     }
 
     public static final NettyClient openClient(HanguProperties properties) {
-        if (Objects.nonNull(NETTY_CLIENT)) {
-            return NETTY_CLIENT;
-        }
         Executor executor = openIoExecutor(properties);
-        openScheduledExecutor(properties);
-        synchronized (CLIENT_LOCK) {
-            if (Objects.nonNull(NETTY_CLIENT)) {
-                return NETTY_CLIENT;
-            }
-            NETTY_CLIENT = new NettyClient();
-            NETTY_CLIENT.start(executor);
-        }
-        return NETTY_CLIENT;
+        openScheduledExecutor();
+        return NettyClientSingleManager.openClient(executor);
     }
 
     public static final Executor openIoExecutor(HanguProperties hanguProperties) {
@@ -92,7 +69,7 @@ public class HanguRpcManager {
         return GLOBAL_EXECUTOR;
     }
 
-    public static final Executor openScheduledExecutor(HanguProperties hanguProperties) {
+    public static final Executor openScheduledExecutor() {
         if (Objects.nonNull(SCHEDULE_EXECUTOR)) {
             return SCHEDULE_EXECUTOR;
         }
@@ -108,11 +85,11 @@ public class HanguRpcManager {
     }
 
     public static final NettyServer getNettyServer() {
-        return NETTY_SERVER;
+        return NettyServerSingleManager.getNettyServer();
     }
 
     public static final NettyClient getNettyClient() {
-        return NETTY_CLIENT;
+        return NettyClientSingleManager.getNettyClient();
     }
 
     public static final Executor getGlobalExecutor() {
@@ -128,19 +105,18 @@ public class HanguRpcManager {
     }
 
     public static final void closeClient() {
-        if(Objects.nonNull(NETTY_CLIENT)) {
-            NETTY_CLIENT.close();
+        NettyClientSingleManager.closeClient();
+        if (Objects.nonNull(GLOBAL_EXECUTOR) && !GLOBAL_EXECUTOR.isShutdown()) {
+            GLOBAL_EXECUTOR.shutdown();
         }
-        if(Objects.nonNull(SCHEDULE_EXECUTOR)) {
+        if (Objects.nonNull(SCHEDULE_EXECUTOR) && !SCHEDULE_EXECUTOR.isShutdown()) {
             SCHEDULE_EXECUTOR.shutdown();
         }
     }
 
     public static final void closeServer() {
-        if(Objects.nonNull(NETTY_SERVER)) {
-            NETTY_SERVER.close();
-        }
-        if(Objects.nonNull(GLOBAL_EXECUTOR)) {
+        NettyServerSingleManager.closeServer();
+        if (Objects.nonNull(GLOBAL_EXECUTOR) && !GLOBAL_EXECUTOR.isShutdown()) {
             GLOBAL_EXECUTOR.shutdown();
         }
     }

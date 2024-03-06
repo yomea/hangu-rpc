@@ -18,7 +18,7 @@ import com.hangu.common.enums.SerializationTypeEnum;
 import com.hangu.common.exception.NoServiceFoundException;
 import com.hangu.common.exception.RpcInvokerException;
 import com.hangu.common.exception.RpcInvokerTimeoutException;
-import com.hangu.common.manager.ConnectManager;
+import com.hangu.consumer.manager.ConnectManager;
 import com.hangu.common.manager.HanguRpcManager;
 import com.hangu.common.util.CommonUtils;
 import com.hangu.common.util.DescClassUtils;

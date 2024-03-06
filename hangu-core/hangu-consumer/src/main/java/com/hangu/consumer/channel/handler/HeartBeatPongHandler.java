@@ -1,19 +1,19 @@
 package com.hangu.consumer.channel.handler;
 
+import com.hangu.common.entity.HostInfo;
 import com.hangu.common.entity.PingPong;
 import com.hangu.common.enums.SerializationTypeEnum;
 import com.hangu.common.util.CommonUtils;
 import com.hangu.consumer.client.ClientConnect;
 import com.hangu.consumer.client.NettyClient;
+import com.hangu.consumer.manager.ConnectManager;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.AttributeKey;
-import java.net.SocketAddress;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,10 +35,10 @@ public class HeartBeatPongHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
         // 尝试重连
         this.reconnect(ctx);
-        super.channelInactive(ctx);
+        super.channelUnregistered(ctx);
     }
 
     @Override
@@ -55,12 +55,9 @@ public class HeartBeatPongHandler extends ChannelInboundHandlerAdapter {
             IdleState idleState = idleStateEvent.state();
             // 读超时，发送心跳
             if (IdleState.READER_IDLE == idleState) {
-                if (!ctx.channel().isActive()) {
-                    this.reconnect(ctx);
-                    // 超过三次都没有收到服务器的响应
-                } else if(retryBeat > 3) {
-                    // 重连
-                    this.reconnect(ctx);
+                if(retryBeat > 3) {
+                    // 关闭重连，通过监听 channelInactive 发起重连
+                    ctx.channel().close();
                 } else {
                     PingPong pingPong = new PingPong();
                     pingPong.setId(CommonUtils.snowFlakeNextId());
@@ -84,25 +81,26 @@ public class HeartBeatPongHandler extends ChannelInboundHandlerAdapter {
     private void reconnect(ChannelHandlerContext ctx) {
         ClientConnect clientConnect = ctx.channel()
             .attr(AttributeKey.<ClientConnect>valueOf(ctx.channel().id().asLongText())).get();
-        ctx.channel().close().addListener(future -> {
-            SocketAddress remoteAddress = ctx.channel().remoteAddress();
-            if (!future.isSuccess()) {
-                log.warn("通道{}关闭失败！", remoteAddress.toString());
-                return;
-            }
-            ctx.channel().eventLoop().execute(() -> {
-                // 重连创建一个新的通道
-                nettyClient.reconnect(remoteAddress).addListener(f -> {
-                    if (!f.isSuccess()) {
-                        log.error("重新连接{}失败！", remoteAddress.toString());
-                    } else {
-                        if (Objects.nonNull(clientConnect)) {
-                            ChannelFuture channelFuture = (ChannelFuture) f;
-                            clientConnect.updateChannel(channelFuture.channel());
-                        }
-                    }
-                });
-            });
-        });
+        // N次之后还是不能连接上，放弃连接
+        if(clientConnect.isRelease()) {
+            return;
+        }
+        // 如果连接还活着，不需要重连
+        if(clientConnect.isActive()) {
+            return;
+        }
+        HostInfo hostInfo = clientConnect.getHostInfo();
+        String host = hostInfo.getHost();
+        int port = hostInfo.getPort();
+        int retryConnectCount = clientConnect.incrConnCount();
+        int delay = 2 * retryConnectCount;
+        // 最大延迟20秒再执行
+        if(delay > 20) {
+            delay = 20;
+        }
+
+        ctx.channel().eventLoop().schedule(() -> {
+            ConnectManager.doCacheReconnect(hostInfo);
+        }, delay, TimeUnit.SECONDS);
     }
 }

@@ -9,7 +9,7 @@ import com.hangu.common.enums.ErrorCodeEnum;
 import com.hangu.common.enums.MethodCallTypeEnum;
 import com.hangu.common.exception.RpcParseException;
 import com.hangu.common.invocation.RpcReferenceHandler;
-import com.hangu.common.manager.ConnectManager;
+import com.hangu.consumer.manager.ConnectManager;
 import com.hangu.common.manager.HanguRpcManager;
 import com.hangu.common.properties.HanguProperties;
 import com.hangu.common.registry.RegistryService;
