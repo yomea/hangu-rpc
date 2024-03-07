@@ -51,63 +51,96 @@ hangu 是函谷的拼音。
 由 HeartBeatPongHandler 处理该事件，处理的逻辑如下：
 
 ```java
-@Override
-protected void channelRead0(ChannelHandlerContext ctx, PingPong pingPong) throws Exception {
-    // 收到消息，重置重试发送心跳次数
+@Slf4j
+public class HeartBeatPongHandler extends ChannelInboundHandlerAdapter {
+
+  private NettyClient nettyClient;
+
+  private int retryBeat = 0;
+
+  public HeartBeatPongHandler(NettyClient nettyClient) {
+    this.nettyClient = nettyClient;
+  }
+
+  @Override
+  public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+    // 尝试重连
+    this.reconnect(ctx);
+    super.channelUnregistered(ctx);
+  }
+
+  @Override
+  public void channelActive(ChannelHandlerContext ctx) throws Exception {
+    // 这里主要是为了解决网络抖动，误判机器下线，等网络正常时，注册中心再次通知
+    // 那么需要重新标记为true
+    this.nettyClient.getClientConnect().setRelease(false);
+    this.nettyClient.getClientConnect().resetConnCount();
+    super.channelActive(ctx);
+  }
+
+  @Override
+  public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    // 收到消息（无论是心跳消息还是任何其他rpc消息），重置重试发送心跳次数
     this.retryBeat = 0;
-}
+    // 这里主要是为了解决网络抖动，误判机器下线，等网络正常时，注册中心再次通知
+    // 那么需要重新标记为true
+    this.nettyClient.getClientConnect().setRelease(false);
+    this.nettyClient.getClientConnect().resetConnCount();
+    super.channelRead(ctx, msg);
+  }
 
-@Override
-public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+  @Override
+  public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
     if (evt instanceof IdleStateEvent) {
-        IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
-        IdleState idleState = idleStateEvent.state();
-        // 读超时，发送心跳
-        if (IdleState.READER_IDLE == idleState) {
-            if (!ctx.channel().isActive()) {
-                this.reconnect(ctx);
-            } else if(retryBeat > 3) {
-                // 重连
-                this.reconnect(ctx);
-            } else {
-                PingPong pingPong = new PingPong();
-                pingPong.setId(CommonUtils.snowFlakeNextId());
-                pingPong.setSerializationType(SerializationTypeEnum.HESSIAN.getType());
-                // 发送心跳（从当前 context 往前）
-                ctx.writeAndFlush(pingPong).addListener(future -> {
-                    if (!future.isSuccess()) {
-                        log.error("发送心跳失败！", future.cause());
-                    }
-                });
-                ++retryBeat;
+      IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
+      IdleState idleState = idleStateEvent.state();
+      // 读超时，发送心跳
+      if (IdleState.READER_IDLE == idleState) {
+        if (retryBeat > 3) {
+          // 关闭重连，通过监听 channelInactive 发起重连
+          ctx.channel().close();
+        } else {
+          PingPong pingPong = new PingPong();
+          pingPong.setId(CommonUtils.snowFlakeNextId());
+          pingPong.setSerializationType(SerializationTypeEnum.HESSIAN.getType());
+          // 发送心跳（从当前 context 往前）
+          ctx.writeAndFlush(pingPong).addListener(future -> {
+            if (!future.isSuccess()) {
+              log.error("发送心跳失败！", future.cause());
             }
+          });
+          ++retryBeat;
         }
+      } else {
+        super.userEventTriggered(ctx, evt);
+      }
+    } else {
+      super.userEventTriggered(ctx, evt);
     }
-}
+  }
 
-private void reconnect(ChannelHandlerContext ctx) {
-    ClientConnect clientConnect = ctx.channel()
-        .attr(AttributeKey.<ClientConnect>valueOf(ctx.channel().id().asLongText())).get();
-    ctx.channel().close().addListener(future -> {
-        SocketAddress remoteAddress = ctx.channel().remoteAddress();
-        if (!future.isSuccess()) {
-            log.warn("通道{}关闭失败！", remoteAddress.toString());
-            return;
-        }
-        ctx.channel().eventLoop().execute(() -> {
-            // 重连创建一个新的通道
-            nettyClient.reconnect(remoteAddress).addListener(f -> {
-                if (!f.isSuccess()) {
-                    log.error("重新连接{}失败！", remoteAddress.toString());
-                } else {
-                    if (Objects.nonNull(clientConnect)) {
-                        ChannelFuture channelFuture = (ChannelFuture) f;
-                        clientConnect.updateChannel(channelFuture.channel());
-                    }
-                }
-            });
-        });
-    });
+  private void reconnect(ChannelHandlerContext ctx) {
+
+    ClientConnect clientConnect = this.nettyClient.getClientConnect();
+    int retryConnectCount = clientConnect.incrConnCount();
+    // N次之后还是不能连接上，放弃连接
+    if (clientConnect.isRelease()) {
+      return;
+    }
+    // 如果连接还活着，不需要重连
+    if (clientConnect.isActive()) {
+      return;
+    }
+    int delay = 2 * (retryConnectCount - 1);
+    // 最大延迟20秒再执行
+    if (delay > 20) {
+      delay = 20;
+    }
+
+    ctx.channel().eventLoop().schedule(() -> {
+      ConnectManager.doCacheReconnect(this.nettyClient);
+    }, delay, TimeUnit.SECONDS);
+  }
 }
 ```
 
