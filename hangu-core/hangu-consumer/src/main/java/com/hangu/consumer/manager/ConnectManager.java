@@ -7,12 +7,12 @@ import com.hangu.common.entity.ServerInfo;
 import com.hangu.common.enums.ErrorCodeEnum;
 import com.hangu.common.exception.RpcInvokerException;
 import com.hangu.common.listener.RegistryNotifyListener;
+import com.hangu.common.manager.HanguExecutorManager;
 import com.hangu.common.registry.RegistryService;
 import com.hangu.consumer.client.ClientConnect;
 import com.hangu.consumer.client.NettyClient;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.util.AttributeKey;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -70,8 +70,7 @@ public class ConnectManager implements RegistryNotifyListener {
             .collect(Collectors.toList());
         Set<HostInfo> hostInfoSet = hostInfoList.stream().collect(Collectors.toSet());
         // 如果链接已经失效并且注册中心上确实不存在该链接了，那么直接标记为释放，连重试都不需要了
-        // 这里可能会因为网络抖动被误认为该地址对应的服务下线，所以需要再下次通知的时候
-        // 主动将release修改回去
+        // 这里可能会因为网络抖动被误认为该地址对应的服务下线，所以需要监听通道是否激活事件
         inactiveChannelList.stream().forEach(e -> {
             if (!hostInfoSet.contains(e.getHostInfo())) {
                 e.markRelease();
@@ -89,11 +88,11 @@ public class ConnectManager implements RegistryNotifyListener {
             return;
         }
         List<ClientConnect> newConnectList = hostInfoList.stream().map(hostInfo -> {
-            ClientConnect clientConnect = ConnectManager.doCacheConnect(hostInfo);
-            // 这里主要是为了解决网络抖动，误判机器下线，等网络正常时，注册中心再次通知
-            // 那么需要重新标记为true
-            if (clientConnect.isActive()) {
-                clientConnect.setRelease(false);
+            ClientConnect clientConnect = null;
+            try {
+                clientConnect = ConnectManager.doCacheConnect(hostInfo);
+            } catch (Exception e) {
+                log.error("连接失败，跳过", e);
             }
             return clientConnect;
         }).collect(Collectors.toList());
@@ -139,21 +138,15 @@ public class ConnectManager implements RegistryNotifyListener {
             if (Objects.nonNull(clientConnect)) {
                 return clientConnect;
             }
-            NettyClient nettyClient = NettyClientSingleManager.getNettyClient();
-            Channel channel;
+            NettyClient nettyClient = openClient(hostInfo);
             try {
-                channel = nettyClient.syncConnect(hostInfo.getHost(), hostInfo.getPort());
+                clientConnect = nettyClient.syncConnect();
             } catch (InterruptedException e) {
-                log.error("连接失败，跳过");
+                log.error("连接失败，跳过", e);
                 throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "连接失败，跳过", e);
             }
-            ClientConnect client = new ClientConnect();
-            client.setChannel(channel);
-            client.setHostInfo(hostInfo);
-            GLOBAL_HOST_INFO_CHANNEL.put(key, client);
-            AttributeKey<ClientConnect> attributeKey = AttributeKey.newInstance(channel.id().asLongText());
-            channel.attr(attributeKey).set(client);
-            return client;
+            GLOBAL_HOST_INFO_CHANNEL.put(key, clientConnect);
+            return clientConnect;
         } finally {
             GLOBAL_CHANNEL_LOCK.remove(key);
         }
@@ -164,7 +157,8 @@ public class ConnectManager implements RegistryNotifyListener {
         return hostInfo.getHost() + ":" + hostInfo.getPort();
     }
 
-    public static void doCacheReconnect(HostInfo hostInfo) {
+    public static void doCacheReconnect(NettyClient nettyClient) {
+        HostInfo hostInfo = nettyClient.getHostInfo();
         String key = buildHostKey(hostInfo);
         // 此处加锁主要为了防止注册中心通知与重连发生线程安全
         // 重连本身是通过监听通道的 unRegister 来触发的，没有线程安全问题
@@ -185,19 +179,13 @@ public class ConnectManager implements RegistryNotifyListener {
             if (client.isRelease()) {
                 return;
             }
-            NettyClient nettyClient = NettyClientSingleManager.getNettyClient();
-            ChannelFuture channelFuture = nettyClient.reconnect(hostInfo.getHost(), hostInfo.getPort());
+            ChannelFuture channelFuture = nettyClient.reconnect();
             channelFuture.addListener(future -> {
                 Channel channel = channelFuture.channel();
                 if (!future.isSuccess()) {
                     log.error("链接服务{}失败！", hostInfo);
-                } else {
-                    client.resetConnCount();
                 }
-                client.setChannel(channel);
-                // 缓存客户端连接，进入下次重试
-                AttributeKey<ClientConnect> attributeKey = AttributeKey.newInstance(channel.id().asLongText());
-                channel.attr(attributeKey).set(client);
+                client.updateChannel(channel);
             });
             GLOBAL_HOST_INFO_CHANNEL.put(key, client);
         } finally {
@@ -219,5 +207,11 @@ public class ConnectManager implements RegistryNotifyListener {
         List<HostInfo> infos = registryService.pullServers(serverInfo);
         this.cacheRegistoryConnect(infos);
         return infos;
+    }
+
+    public static NettyClient openClient(HostInfo hostInfo) {
+        NettyClient nettyClient = new NettyClient(hostInfo);
+        nettyClient.open(HanguExecutorManager.getGlobalExecutor());
+        return nettyClient;
     }
 }

@@ -1,10 +1,10 @@
 package com.hangu.provider.entity;
 
-import java.util.List;
 import lombok.Data;
 
 /**
  * http 参数绑定结果
+ *
  * @author wuzhenhong
  * @date 2024/2/7 14:30
  */

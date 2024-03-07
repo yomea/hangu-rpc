@@ -8,13 +8,13 @@ import com.hangu.common.entity.ServerInfo;
 import com.hangu.common.enums.ErrorCodeEnum;
 import com.hangu.common.enums.MethodCallTypeEnum;
 import com.hangu.common.exception.RpcParseException;
-import com.hangu.common.invocation.RpcReferenceHandler;
-import com.hangu.consumer.manager.ConnectManager;
-import com.hangu.common.manager.HanguRpcManager;
-import com.hangu.common.properties.HanguProperties;
+import com.hangu.common.manager.HanguExecutorManager;
+import com.hangu.common.properties.ExecutorProperties;
 import com.hangu.common.registry.RegistryService;
 import com.hangu.common.util.CommonUtils;
 import com.hangu.consumer.annotation.HanguMethod;
+import com.hangu.consumer.invocation.RpcReferenceHandler;
+import com.hangu.consumer.manager.ConnectManager;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -43,10 +43,10 @@ public class ReferenceBean<T> {
 
     private RegistryService registryService;
 
-    private HanguProperties hanguProperties;
+    private ExecutorProperties executorProperties;
 
     public ReferenceBean(RequestHandlerInfo requestHandlerInfo, Class<T> interfaceClass,
-        RegistryService registryService, HanguProperties hanguProperties) {
+        RegistryService registryService, ExecutorProperties executorProperties) {
         ServerInfo serverInfo = requestHandlerInfo.getServerInfo();
         String interfaceName = serverInfo.getInterfaceName();
         if (StringUtils.isBlank(interfaceName)) {
@@ -56,7 +56,7 @@ public class ReferenceBean<T> {
         this.requestHandlerInfo = requestHandlerInfo;
         this.interfaceClass = interfaceClass;
         this.registryService = registryService;
-        this.hanguProperties = hanguProperties;
+        this.executorProperties = executorProperties;
     }
 
     public T buildServiceProxy(ClassLoader classLoader) {
@@ -67,8 +67,8 @@ public class ReferenceBean<T> {
     }
 
     public void init() {
-        // 启动netty客户端
-        HanguRpcManager.openClient(hanguProperties);
+        // 启动全局处理线程
+        HanguExecutorManager.openAllGlobalExecutor(executorProperties.getCoreNum(), executorProperties.getMaxNum());
 
         this.buildMethodInfoCache();
         // 初始化本地服务列表

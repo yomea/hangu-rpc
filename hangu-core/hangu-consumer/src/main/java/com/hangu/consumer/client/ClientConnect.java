@@ -19,9 +19,14 @@ public class ClientConnect {
     private int retryConnectCount;
 
     /**
-     * 比较为释放，接收到注册中心的通知，次机器下线，这个值设置为true
+     * 标记为释放，接收到注册中心的通知，次机器下线，这个值设置为true
      */
     private boolean release;
+
+    public ClientConnect(Channel channel, HostInfo hostInfo) {
+        this.channel = channel;
+        this.hostInfo = hostInfo;
+    }
 
     public void updateChannel(Channel channel) {
         this.channel = channel;
@@ -30,7 +35,7 @@ public class ClientConnect {
     public int incrConnCount() {
         this.retryConnectCount++;
         // 超过20次了，标记为要释放掉，确实没法连上了
-        if(this.retryConnectCount > 20) {
+        if (this.retryConnectCount > 20) {
             this.markRelease();
         }
         return this.retryConnectCount;

@@ -25,6 +25,7 @@ public interface UserService {
     List<UserInfo> getUserInfos(List<UserInfo> userInfos);
 
     UserInfo xxx(String name, int age);
+
     UserInfo yyy(UserInfo userInfo);
 
     UserInfo zzz(UserInfo userInfo, HttpServletRequest request, HttpServletResponse response);

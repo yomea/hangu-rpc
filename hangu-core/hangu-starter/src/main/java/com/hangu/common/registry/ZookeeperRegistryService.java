@@ -1,6 +1,5 @@
 package com.hangu.common.registry;
 
-import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.json.JSONUtil;
 import com.hangu.common.entity.HostInfo;
 import com.hangu.common.entity.RegistryInfo;
@@ -13,13 +12,11 @@ import com.hangu.common.exception.RpcParseException;
 import com.hangu.common.listener.CuratorConnectionStateListener;
 import com.hangu.common.listener.RegistryNotifyListener;
 import com.hangu.common.properties.ZookeeperConfigProperties;
-import com.hangu.common.registry.AbstractRegistryService;
 import com.hangu.common.util.CommonUtils;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -139,8 +136,8 @@ public class ZookeeperRegistryService extends AbstractRegistryService {
     private void create(String path, boolean ephemeral) {
         // 检查持久化Znode是否存在，主要是订阅的是需要使用，订阅时可能提供者还没有启动
         // 这里需要监控该节点
-        if(!ephemeral) {
-            if(this.checkExists(path)) {
+        if (!ephemeral) {
+            if (this.checkExists(path)) {
                 return;
             }
         }
@@ -170,7 +167,9 @@ public class ZookeeperRegistryService extends AbstractRegistryService {
             client.create().withMode(CreateMode.EPHEMERAL).forPath(path);
         } catch (NodeExistsException e) {
             log.warn(
-                "ZNode " + path + " already exists, 对于这种情况可能是其他的session在删除，但是还没来得及删，这里尝试在当前session里先删除再创建", e);
+                "ZNode " + path
+                    + " already exists, 对于这种情况可能是其他的session在删除，但是还没来得及删，这里尝试在当前session里先删除再创建",
+                e);
             deletePath(path);
             createEphemeral(path);
         } catch (Exception e) {
@@ -199,7 +198,9 @@ public class ZookeeperRegistryService extends AbstractRegistryService {
             client.create().withMode(CreateMode.EPHEMERAL).forPath(path, dataBytes);
         } catch (NodeExistsException e) {
             log.warn(
-                "ZNode " + path + " already exists, 对于这种情况可能是其他的session在删除，但是还没来得及删，这里尝试在当前session里先删除再创建", e);
+                "ZNode " + path
+                    + " already exists, 对于这种情况可能是其他的session在删除，但是还没来得及删，这里尝试在当前session里先删除再创建",
+                e);
             deletePath(path);
             createEphemeral(path, data);
         } catch (Exception e) {

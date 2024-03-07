@@ -1,6 +1,7 @@
 package com.hangu.controller;
 
 import com.hangu.common.entity.HttpServletResponse;
+import com.hangu.common.properties.ExecutorProperties;
 import com.hangu.common.properties.HanguProperties;
 import com.hangu.common.registry.RegistryService;
 import com.hangu.consumer.UserService;
@@ -93,10 +94,14 @@ public class UserController {
     @GetMapping("/{interfaceName}/{methodName}/generic/api")
     public void h(HttpServletRequest request, javax.servlet.http.HttpServletResponse response) throws Exception {
         com.hangu.common.entity.HttpServletRequest apiRequest = HttpGenericProxyFactory.buildRequest(request);
-        HttpGenericService httpProxy = HttpGenericProxyFactory.httpProxy(request.getRequestURI(), registryService, hanguProperties);
+        ExecutorProperties executorProperties = new ExecutorProperties();
+        executorProperties.setMaxNum(hanguProperties.getMaxNum());
+        executorProperties.setCoreNum(hanguProperties.getCoreNum());
+        HttpGenericService httpProxy = HttpGenericProxyFactory.httpProxy(request.getRequestURI(), registryService,
+            executorProperties);
         HttpServletResponse apiResponse = httpProxy.http(apiRequest);
         Optional.ofNullable(apiResponse.getHeads())
-                .orElse(Collections.emptyMap()).forEach(response::addHeader);
+            .orElse(Collections.emptyMap()).forEach(response::addHeader);
         response.getOutputStream().write(apiResponse.getBodyData());
         response.getOutputStream().flush();
         response.getOutputStream().close();

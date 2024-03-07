@@ -1,11 +1,11 @@
 package com.hangu.common.configuration;
 
-import com.hangu.common.manager.HanguRpcManager;
+import com.hangu.common.manager.HanguExecutorManager;
 import com.hangu.common.properties.HanguProperties;
 import com.hangu.common.properties.JedisConfigPropertis;
 import com.hangu.common.properties.ZookeeperConfigProperties;
-import com.hangu.common.registry.RegistryService;
 import com.hangu.common.registry.RedisRegistryService;
+import com.hangu.common.registry.RegistryService;
 import com.hangu.common.registry.ZookeeperRegistryService;
 import com.hangu.consumer.configuration.ConsumerConfiguration;
 import com.hangu.provider.configuration.ProviderConfiguration;
@@ -39,7 +39,7 @@ public class HanguAutoConfiguration {
 
     @Bean
     public Executor rpcIoExecutor(HanguProperties hanguProperties) {
-        return HanguRpcManager.openIoExecutor(hanguProperties);
+        return HanguExecutorManager.openIoExecutor(hanguProperties.getCoreNum(), hanguProperties.getMaxNum());
     }
 
     @ConditionalOnProperty(prefix = "hangu.rpc.registry", name = "protocol", havingValue = "redis")

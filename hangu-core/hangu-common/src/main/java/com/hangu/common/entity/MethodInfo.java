@@ -2,7 +2,6 @@ package com.hangu.common.entity;
 
 import com.hangu.common.callback.RpcResponseCallback;
 import com.hangu.common.enums.MethodCallTypeEnum;
-import java.lang.reflect.Method;
 import java.util.List;
 import lombok.Data;
 

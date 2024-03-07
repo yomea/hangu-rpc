@@ -5,15 +5,15 @@ import com.hangu.common.entity.MethodInfo;
 import com.hangu.common.entity.ParameterInfo;
 import com.hangu.common.entity.RequestHandlerInfo;
 import com.hangu.common.entity.ServerInfo;
+import com.hangu.common.entity.ServerMethodInfo;
 import com.hangu.common.enums.ErrorCodeEnum;
 import com.hangu.common.enums.MethodCallTypeEnum;
 import com.hangu.common.exception.RpcInvokerException;
-import com.hangu.common.properties.HanguProperties;
+import com.hangu.common.properties.ExecutorProperties;
 import com.hangu.common.registry.RegistryService;
 import com.hangu.common.util.HttpGenericInvokeUtils;
 import com.hangu.consumer.reference.ReferenceBean;
 import com.hangu.consumer.reference.ServiceReference;
-import com.hangu.entity.ServerMethodInfo;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.QueryStringDecoder;
@@ -49,7 +49,7 @@ public class HttpGenericProxyFactory {
     private static final Object OBJECT = new Object();
 
     public static HttpGenericService httpProxy(String uri,
-        RegistryService registryService, HanguProperties hanguProperties) throws Exception {
+        RegistryService registryService, ExecutorProperties executorProperties) throws Exception {
 
         ServerMethodInfo serverMethodInfo = HttpGenericProxyFactory.parsePathVariables(uri);
         String cacheKey = HttpGenericProxyFactory.createCacheKey(serverMethodInfo);
@@ -66,7 +66,7 @@ public class HttpGenericProxyFactory {
         try {
             RequestHandlerInfo requestHandlerInfo = HttpGenericProxyFactory.buildRequestHandlerInfo(serverMethodInfo);
             ReferenceBean<HttpGenericService> referenceBean = new ReferenceBean<>(requestHandlerInfo,
-                HttpGenericService.class, registryService, hanguProperties);
+                HttpGenericService.class, registryService, executorProperties);
             HttpGenericService httpService = ServiceReference.reference(referenceBean);
             HTTP_PROXY.put(cacheKey, httpService);
             return httpService;
@@ -96,7 +96,8 @@ public class HttpGenericProxyFactory {
         List<String> ablePatchVariables = Arrays.stream(pathVariableArr).filter(StringUtils::isNotBlank)
             .collect(Collectors.toList());
         if (ablePatchVariables.size() < 4) {
-            throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "url路径参数不正确，请使用形如 ”/groupName/version/interfaceName/methodName/generic/api“ 的url请求");
+            throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(),
+                "url路径参数不正确，请使用形如 ”/groupName/version/interfaceName/methodName/generic/api“ 的url请求");
         }
 
         String methodName = ablePatchVariables.get(ablePatchVariables.size() - 3);
@@ -183,7 +184,7 @@ public class HttpGenericProxyFactory {
         apiReqest.setURI(request.uri());
         apiReqest.setGetParam(getRequestParams(request));
         ByteBuf content = request.content();
-        if(content.isReadable() && HttpGenericInvokeUtils.isApplicationJson(request)) {
+        if (content.isReadable() && HttpGenericInvokeUtils.isApplicationJson(request)) {
             byte[] bytes = new byte[content.capacity()];
             request.content().readBytes(bytes);
             apiReqest.setBodyData(bytes);
@@ -226,7 +227,7 @@ public class HttpGenericProxyFactory {
         for (InterfaceHttpData data : httpPostData) {
             if (data.getHttpDataType() == InterfaceHttpData.HttpDataType.Attribute) {
                 MemoryAttribute attribute = (MemoryAttribute) data;
-                params.put(attribute.getName(), new String[] {attribute.getValue()});
+                params.put(attribute.getName(), new String[]{attribute.getValue()});
             }
         }
     }

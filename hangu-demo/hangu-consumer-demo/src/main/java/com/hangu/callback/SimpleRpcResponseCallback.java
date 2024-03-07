@@ -1,8 +1,8 @@
 package com.hangu.callback;
 
 import cn.hutool.json.JSONUtil;
-import com.hangu.common.entity.RpcResult;
 import com.hangu.common.callback.RpcResponseCallback;
+import com.hangu.common.entity.RpcResult;
 
 /**
  * @author wuzhenhong

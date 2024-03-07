@@ -23,19 +23,21 @@ public class PrimitiveMethodArgumentResolver extends AbstractMethodArgumentResol
     }
 
     @Override
-    public boolean support(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+    public boolean support(Parameter parameter, HttpServletRequest httpServletRequest,
+        HttpServletResponse httpServletResponse) {
         Class<?> type = parameter.getType();
         return ClassUtils.isPrimitiveOrWrapper(type) || type == String.class;
     }
 
     @Override
-    public Object resolver(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+    public Object resolver(Parameter parameter, HttpServletRequest httpServletRequest,
+        HttpServletResponse httpServletResponse) {
         String name = parameter.getName();
         Class<?> type = parameter.getType();
         Map<String, String[]> getParam = Optional.ofNullable(httpServletRequest.getGetParam())
             .orElse(Collections.emptyMap());
         String[] values = getParam.get(name);
-        if(Objects.isNull(values) || values.length == 0) {
+        if (Objects.isNull(values) || values.length == 0) {
             return DescClassUtils.getInitPrimitiveValue(type);
         } else {
             String v = values[0];

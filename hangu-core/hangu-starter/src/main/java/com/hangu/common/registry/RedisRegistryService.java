@@ -1,7 +1,6 @@
 package com.hangu.common.registry;
 
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.thread.NamedThreadFactory;
 import com.hangu.common.constant.RegistryConstants;
@@ -12,14 +11,11 @@ import com.hangu.common.entity.ServerInfo;
 import com.hangu.common.enums.ErrorCodeEnum;
 import com.hangu.common.exception.RpcInvokerException;
 import com.hangu.common.listener.RegistryNotifyListener;
-import com.hangu.common.registry.AbstractRegistryService;
-import com.hangu.common.registry.RegistryService;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;

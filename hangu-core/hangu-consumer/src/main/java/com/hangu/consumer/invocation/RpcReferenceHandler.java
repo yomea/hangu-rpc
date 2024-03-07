@@ -1,4 +1,4 @@
-package com.hangu.common.invocation;
+package com.hangu.consumer.invocation;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.RandomUtil;
@@ -18,12 +18,11 @@ import com.hangu.common.enums.SerializationTypeEnum;
 import com.hangu.common.exception.NoServiceFoundException;
 import com.hangu.common.exception.RpcInvokerException;
 import com.hangu.common.exception.RpcInvokerTimeoutException;
-import com.hangu.consumer.manager.ConnectManager;
-import com.hangu.common.manager.HanguRpcManager;
+import com.hangu.common.manager.HanguExecutorManager;
 import com.hangu.common.util.CommonUtils;
 import com.hangu.common.util.DescClassUtils;
 import com.hangu.consumer.client.ClientConnect;
-import com.hangu.consumer.client.NettyClient;
+import com.hangu.consumer.manager.ConnectManager;
 import com.hangu.consumer.manager.RpcRequestManager;
 import io.netty.channel.Channel;
 import java.lang.reflect.InvocationHandler;
@@ -73,11 +72,6 @@ public class RpcReferenceHandler implements InvocationHandler {
         // TODO: 2023/8/2 负载均衡，先随便来个随机
         int index = RandomUtil.getRandom().nextInt(0, connects.size());
         ClientConnect connect = connects.get(index);
-        // 获取客户端
-        NettyClient nettyClient = HanguRpcManager.getNettyClient();
-        if (Objects.isNull(nettyClient)) {
-            throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "请先启动客户端！");
-        }
         // 连接
         Channel channel = connect.getChannel();
         MethodInfo providedMethodInfo = this.requestHandlerInfo.getProvidedMethodInfo();
@@ -129,7 +123,7 @@ public class RpcReferenceHandler implements InvocationHandler {
         int timeout = this.getTimeout(methodInfo);
 
         if (!MethodCallTypeEnum.SYNC.getType().equals(callType)) {
-            HanguRpcManager.getSchedule().schedule(() -> {
+            HanguExecutorManager.getSchedule().schedule(() -> {
                 if (future.isSuccess()) {
                     return;
                 }

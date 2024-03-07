@@ -2,7 +2,6 @@ package com.hangu.provider.binder;
 
 import java.util.Objects;
 import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.ConfigurablePropertyAccessor;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.PropertyValue;
@@ -37,7 +36,7 @@ public class WebDataBinder {
     private final String objectName;
 
     public WebDataBinder(@Nullable Object target, ConversionService conversionService) {
-        if(Objects.isNull(target)) {
+        if (Objects.isNull(target)) {
             throw new RuntimeException("要绑定的对象不能设置为空！");
         }
         this.target = target;

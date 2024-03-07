@@ -1,4 +1,4 @@
-package com.hangu.entity;
+package com.hangu.common.entity;
 
 import java.util.List;
 import lombok.AllArgsConstructor;

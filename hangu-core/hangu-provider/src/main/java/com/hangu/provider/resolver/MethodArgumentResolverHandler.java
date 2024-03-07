@@ -40,7 +40,8 @@ public class MethodArgumentResolverHandler {
         this.addDefaultResolvers();
     }
 
-    public Object resolver(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+    public Object resolver(Parameter parameter, HttpServletRequest httpServletRequest,
+        HttpServletResponse httpServletResponse) {
         for (MethodArgumentResolver resolver : resolverList) {
             if (resolver.support(parameter, httpServletRequest, httpServletResponse)) {
                 return resolver.resolver(parameter, httpServletRequest, httpServletResponse);
@@ -62,7 +63,7 @@ public class MethodArgumentResolverHandler {
      * 添加自定义解析器
      */
     public void addCustomerResolvers(List<MethodArgumentResolver> argumentResolverList) {
-        if(CollectionUtils.isEmpty(argumentResolverList)) {
+        if (CollectionUtils.isEmpty(argumentResolverList)) {
             return;
         }
         this.resolverList.addAll(argumentResolverList);

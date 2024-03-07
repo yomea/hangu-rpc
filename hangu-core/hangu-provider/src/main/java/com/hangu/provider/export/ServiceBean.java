@@ -2,11 +2,11 @@ package com.hangu.provider.export;
 
 import com.hangu.common.entity.RegistryInfo;
 import com.hangu.common.entity.ServerInfo;
-import com.hangu.common.manager.HanguRpcManager;
 import com.hangu.common.registry.RegistryService;
 import com.hangu.common.util.CommonUtils;
 import com.hangu.provider.invoker.RpcInvoker;
 import com.hangu.provider.manager.LocalServiceManager;
+import com.hangu.provider.manager.NettyServerSingleManager;
 import com.hangu.provider.resolver.MethodArgumentResolverHandler;
 import java.util.Objects;
 
@@ -36,14 +36,15 @@ public class ServiceBean<T> {
     }
 
     public ServiceBean(ServerInfo serverInfo,
-        Class<T> interfaceClass, T service, RegistryService registryService, MethodArgumentResolverHandler methodArgumentResolverHandler) {
+        Class<T> interfaceClass, T service, RegistryService registryService,
+        MethodArgumentResolverHandler methodArgumentResolverHandler) {
         this.serverInfo = serverInfo;
         this.interfaceClass = interfaceClass;
         this.service = service;
         this.registryService = registryService;
         this.methodArgumentResolverHandler = Objects.isNull(methodArgumentResolverHandler)
-        ? MethodArgumentResolverHandler.DEFAULT_RESOLVER
-        : methodArgumentResolverHandler;
+            ? MethodArgumentResolverHandler.DEFAULT_RESOLVER
+            : methodArgumentResolverHandler;
     }
 
     public void init() {
@@ -59,7 +60,7 @@ public class ServiceBean<T> {
         registryInfo.setGroupName(this.serverInfo.getGroupName());
         registryInfo.setInterfaceName(this.serverInfo.getInterfaceName());
         registryInfo.setVersion(this.serverInfo.getVersion());
-        registryInfo.setHostInfo(HanguRpcManager.getLocalHost());
+        registryInfo.setHostInfo(NettyServerSingleManager.getLocalHost());
         this.registryService.register(registryInfo);
     }
 

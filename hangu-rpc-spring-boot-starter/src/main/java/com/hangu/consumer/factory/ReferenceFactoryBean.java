@@ -2,6 +2,7 @@ package com.hangu.consumer.factory;
 
 import com.hangu.common.entity.RequestHandlerInfo;
 import com.hangu.common.entity.ServerInfo;
+import com.hangu.common.properties.ExecutorProperties;
 import com.hangu.common.properties.HanguProperties;
 import com.hangu.common.registry.RegistryService;
 import com.hangu.common.util.CommonUtils;
@@ -48,8 +49,11 @@ public class ReferenceFactoryBean<T> implements FactoryBean<T>, InitializingBean
     public void afterPropertiesSet() throws Exception {
         RequestHandlerInfo requestHandlerInfo = new RequestHandlerInfo();
         requestHandlerInfo.setServerInfo(this.serverInfo);
+        ExecutorProperties executorProperties = new ExecutorProperties();
+        executorProperties.setCoreNum(hanguProperties.getCoreNum());
+        executorProperties.setMaxNum(hanguProperties.getMaxNum());
         ReferenceBean<T> referenceBean = new ReferenceBean<>(requestHandlerInfo, this.interfaceClass, registryService,
-            hanguProperties);
+            executorProperties);
         this.service = ServiceReference.reference(referenceBean, CommonUtils.getClassLoader(this.getClass()));
     }
 }

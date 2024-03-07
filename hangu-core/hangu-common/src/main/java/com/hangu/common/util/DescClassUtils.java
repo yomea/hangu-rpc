@@ -1,6 +1,5 @@
 package com.hangu.common.util;
 
-import com.hangu.common.entity.MethodInfo;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -108,7 +107,7 @@ public final class DescClassUtils {
 
     public static Object getInitPrimitiveValue(Class<?> type) {
 
-        if(!ClassUtils.isPrimitiveOrWrapper(type) || ClassUtils.isPrimitiveWrapper(type)) {
+        if (!ClassUtils.isPrimitiveOrWrapper(type) || ClassUtils.isPrimitiveWrapper(type)) {
             return null;
         }
         if (boolean.class == type) {
@@ -126,7 +125,7 @@ public final class DescClassUtils {
         } else if (long.class == type) {
             return 0L;
         } else if (short.class == type) {
-            return (short)0;
+            return (short) 0;
         } else {
             return null;
         }

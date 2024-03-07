@@ -8,6 +8,7 @@ import com.hangu.common.util.CommonUtils;
 import com.hangu.provider.annotation.HanguService;
 import com.hangu.provider.invoker.RpcInvoker;
 import com.hangu.provider.manager.LocalServiceManager;
+import com.hangu.provider.manager.NettyServerSingleManager;
 import com.hangu.provider.resolver.MethodArgumentResolverHandler;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,7 +76,7 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
                 registryInfo.setGroupName(groupName);
                 registryInfo.setInterfaceName(intName);
                 registryInfo.setVersion(version);
-                registryInfo.setHostInfo(HanguRpcManager.getLocalHost());
+                registryInfo.setHostInfo(NettyServerSingleManager.getLocalHost());
                 registryService.register(registryInfo);
             });
         });

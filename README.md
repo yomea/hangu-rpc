@@ -27,6 +27,7 @@ hangu 是函谷的拼音。
 从架构图中可以看到，心跳由消费者主动发起，默认每隔2s向服务提供者发送心跳包，心跳的实现很简单，在消费者这边
 使用 Netty 提供的 IdleStateHandler 事件处理器，在每隔2s发起读超时事件时向提供者发送心跳，超过3次未收到
 提供者的响应即认为需要重连，消费者端的 IdleStateHandler 配置代码如下：
+
 ```java
 /**
  * 代码位置{@link com.hangu.consumer.client.NettyClient#start}
@@ -44,9 +45,11 @@ hangu 是函谷的拼音。
 
 
 ```
+
 可以看到有三个与心跳相关的处理器，分别为 HeartBeatEncoder，IdleStateHandler，HeartBeatPongHandler，
 其中 IdleStateHandler 配置了读取超时为2s，超过2s没有收到读事件，那么就会发出读超时事件， 发出读超时事件之后，
 由 HeartBeatPongHandler 处理该事件，处理的逻辑如下：
+
 ```java
 @Override
 protected void channelRead0(ChannelHandlerContext ctx, PingPong pingPong) throws Exception {
@@ -115,6 +118,7 @@ userEventTriggered 方法接收到读超时事件后，会判断当前连接是�
 重连。
 
 服务提供者端不会主动向消费者发送心跳，它只会被动接收心跳，但超过8s未接收到任何来自消费者的读写数据时，主动关闭连接
+
 ```java
 /**
  * 代码位置{@link com.hangu.provider.server.NettyServer#start}
@@ -122,7 +126,6 @@ userEventTriggered 方法接收到读超时事件后，会判断当前连接是�
 // 读写时间超过8s，表示该链接已失效
 .addLast(new IdleStateHandler(0, 0, 8, TimeUnit.SECONDS))
 ```
-
 
 #### 三、快速启动
 
@@ -145,6 +148,7 @@ hangu-demo里有两个子模块，分别是提供者和消费者，启动这两�
       <version>1.0-SNAPSHOT</version>
     </dependency>
 ```
+
 配置hangu-rpc(注册中心为redis哨兵模式的)：
 
 ```yaml
@@ -180,12 +184,14 @@ hangu:
 ```
 
 如果你有自己的注册中心，可以选择实现 com.hangu.common.registry.RegistryService 接口，然后将
-hangu.rpc.registry.protocol=你自己的注册中心名字（其实这里本人使用的时springboot的@ConditionalOnProperty去动态加载， 也就是说你只要
+hangu.rpc.registry.protocol=你自己的注册中心名字（其实这里本人使用的时springboot的@ConditionalOnProperty去动态加载，
+也就是说你只要
 保证spring容器中只存在一个实现了RegistryService接口的注册服务即可）
 
 - 提供者
 
 假设你有以下服务
+
 ```java
 @HanguService
 public class UserServiceImpl implements UserService {
@@ -208,6 +214,7 @@ public class UserServiceImpl implements UserService {
     }
 }
 ```
+
 接口为 UserService，实现类为 UserServiceImpl，如果你要暴露该接口，那么只需要在这个实现类上标注 @HanguService 注解即可，
 这个注解目前有三个属性，分别为groupName，interfaceName，version，组通常是一系列相关业务的分组，通常会设置为服务名，因为我们的服务通常
 会以业务进行垂直划分，interfaceName表示接口名，默认不填的情况下，会自动赋值为接口全路径类名，version表示版本，有时候我们给多个第三方提供服务的
@@ -216,6 +223,7 @@ public class UserServiceImpl implements UserService {
 - 消费者
 
 上面提供者提供了 UserService 服务，如果我们要引入这个服务怎么办？
+
 ```java
 @HanguReference
 public interface UserService {
@@ -226,6 +234,7 @@ public interface UserService {
     String getUserInfo(String name);
 }
 ```
+
 可以看到这个接口上标注了 @HanguReference 注解，这个注解与服务提供者的 @HanguService 注解一样拥有
 groupName，interfaceName，version 三个属性，只要这三个属性与提供者的一一对应就能正常提供服务，这意味只要指定了
 interfaceName这个名字与服务提供者一致，即使 UserService 这个接口类型的名字你瞎写，放在任何包下都可以正常服务，但是不建议
@@ -250,6 +259,7 @@ public class HanguRpcBootstrapConfig {
 ```
 
 注意：要确保加入了以下依赖(该依赖用于处理ConfigurationProperties注解)
+
 ```xml
 <dependency>
     <groupId>org.springframework.boot</groupId>
@@ -262,7 +272,8 @@ public class HanguRpcBootstrapConfig {
 ###### 3.2.2 普通项目
 
 - 配置
-如果你没有使用spring框架，那么你只需要在pom.xml中添加以下依赖
+  如果你没有使用spring框架，那么你只需要在pom.xml中添加以下依赖
+
 ```xml
 <dependency>
   <groupId>org.hangu</groupId>
@@ -270,6 +281,7 @@ public class HanguRpcBootstrapConfig {
   <version>1.0-SNAPSHOT</version>
 </dependency>
 ```
+
 - 提供者
 
 依然假设你有一个叫 UserServiceImpl的接口实现

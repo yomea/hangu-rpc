@@ -85,7 +85,8 @@ public class ResponseMessageCodec extends MessageToMessageCodec<ByteBuf, Respons
         byte serialType = (byte) (hanguCons.SERIALIZATION_MARK & msgType);
         try {
             // 表示是来自客户端的 http 请求
-            if((MsgTypeMarkEnum.HTTP_REQUEST_FLAG.getMark() & msgType) == MsgTypeMarkEnum.HTTP_REQUEST_FLAG.getMark()) {
+            if ((MsgTypeMarkEnum.HTTP_REQUEST_FLAG.getMark() & msgType)
+                == MsgTypeMarkEnum.HTTP_REQUEST_FLAG.getMark()) {
                 Request request = this.dealRequest(id, byteBuf, serialType);
                 request.setHttp(true);
                 list.add(request);

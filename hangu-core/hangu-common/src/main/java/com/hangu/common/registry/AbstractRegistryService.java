@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author wuzhenhong
  * @date 2023/8/18 9:11
  */
-public abstract class AbstractRegistryService implements RegistryService{
+public abstract class AbstractRegistryService implements RegistryService {
 
     protected final Set<RegistryInfo> registered = new ConcurrentHashSet<>();
     protected final Map<ServerInfo, RegistryNotifyListener> subscriberMap = new ConcurrentHashMap<>();

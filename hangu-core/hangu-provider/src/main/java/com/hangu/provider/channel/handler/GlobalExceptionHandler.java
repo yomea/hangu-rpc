@@ -9,7 +9,6 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.Attribute;
-import io.netty.util.AttributeKey;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,14 +18,14 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Sharable
-public class GlobalExceptionHandler extends ChannelDuplexHandler  {
+public class GlobalExceptionHandler extends ChannelDuplexHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         log.error("请求处理失败！", cause);
         Attribute<Request> requestAttribute = ctx.channel().attr(hanguCons.REQUEST_ATTRIBUTE_KEY);
         Request request = requestAttribute.getAndSet(null);
-        if(Objects.nonNull(request)) {
+        if (Objects.nonNull(request)) {
             // 如果是其他在处理请求过程中抛出的异常，那么需要通知到消费者
             Response response = CommonUtils.createResponseInfo(request.getId(), request.getSerializationType(),
                 ErrorCodeEnum.FAILURE.getCode(), cause.getClass(), cause);

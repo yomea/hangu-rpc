@@ -32,7 +32,7 @@ public class RequestMessageCodec extends MessageToMessageCodec<ByteBuf, Request>
 
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
-        if(!ctx.channel().isWritable()) {
+        if (!ctx.channel().isWritable()) {
             ctx.channel().flush();
         }
         ctx.fireChannelWritabilityChanged();
@@ -41,14 +41,15 @@ public class RequestMessageCodec extends MessageToMessageCodec<ByteBuf, Request>
     @Override
     protected void encode(ChannelHandlerContext ctx, Request request, List<Object> out) throws Exception {
         // 超过最高水位线，暂时不允许发送请求
-        if(!ctx.channel().isWritable()) {
+        if (!ctx.channel().isWritable()) {
             throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "数据请求过于频繁！超过设置的最高水位线！");
         }
         ByteBuf byteBuf = ctx.alloc().buffer();
         // 魔数 2bytes
         byteBuf.writeShort(hanguCons.MAGIC);
         // 请求类型，序列化方式 1bytes
-        byte finalMsgType = request.isHttp() ? MsgTypeMarkEnum.HTTP_REQUEST_FLAG.getMark() : MsgTypeMarkEnum.REQUEST_FLAG.getMark();
+        byte finalMsgType =
+            request.isHttp() ? MsgTypeMarkEnum.HTTP_REQUEST_FLAG.getMark() : MsgTypeMarkEnum.REQUEST_FLAG.getMark();
         byte serializationType = request.getSerializationType();
         finalMsgType |= serializationType;
         // 消息类型 1byte

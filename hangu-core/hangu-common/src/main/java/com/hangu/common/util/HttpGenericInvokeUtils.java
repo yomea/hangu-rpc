@@ -7,6 +7,7 @@ import java.util.Objects;
 
 /**
  * http 泛化调用工具类
+ *
  * @author wuzhenhong
  * @date 2024/2/9 9:10
  */
@@ -15,9 +16,10 @@ public class HttpGenericInvokeUtils {
 
     public static boolean isApplicationJson(FullHttpRequest request) {
 
-        if(request.headers().contains(HttpHeaderNames.CONTENT_TYPE)) {
+        if (request.headers().contains(HttpHeaderNames.CONTENT_TYPE)) {
             String[] headerArr = splitHeaderContentType(request.headers().get(HttpHeaderNames.CONTENT_TYPE));
-            return Objects.nonNull(headerArr) && headerArr.length > 0 && headerArr[0].equals(HttpHeaderValues.APPLICATION_JSON.toString());
+            return Objects.nonNull(headerArr) && headerArr.length > 0 && headerArr[0].equals(
+                HttpHeaderValues.APPLICATION_JSON.toString());
         } else {
             return false;
         }
@@ -64,7 +66,7 @@ public class HttpGenericInvokeUtils {
 
     private static int findEndOfString(String sb) {
         int result;
-        for (result = sb.length(); result > 0; result --) {
+        for (result = sb.length(); result > 0; result--) {
             if (!Character.isWhitespace(sb.charAt(result - 1))) {
                 break;
             }

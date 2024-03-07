@@ -1,24 +1,26 @@
 package com.hangu.consumer.client;
 
-import com.hangu.common.constant.hanguCons;
+import com.hangu.common.entity.HostInfo;
 import com.hangu.common.handler.ByteFrameDecoder;
 import com.hangu.common.handler.HeartBeatEncoder;
 import com.hangu.consumer.channel.handler.HeartBeatPongHandler;
 import com.hangu.consumer.channel.handler.RequestMessageCodec;
 import com.hangu.consumer.channel.handler.ResponseMessageHandler;
+import com.hangu.consumer.manager.NettyClientEventLoopManager;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
-
-import java.net.SocketAddress;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -28,73 +30,76 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NettyClient {
 
+    private NioEventLoopGroup NIO_EVENT_LOOP_GROUP = NettyClientEventLoopManager.getEventLoop();
+
     private Bootstrap bootstrap;
 
-    private NioEventLoopGroup nioEventLoopGroup;
+    private HostInfo hostInfo;
 
-    public void start(Executor executor) {
-        try {
-            bootstrap = new Bootstrap();
-            nioEventLoopGroup = new NioEventLoopGroup(hanguCons.DEF_IO_THREADS << 3);
-//            @Sharable
-            LoggingHandler loggingHandler = new LoggingHandler(LogLevel.INFO);
-            bootstrap.group(nioEventLoopGroup)
-                    .option(ChannelOption.SO_KEEPALIVE, true)
-                    .option(ChannelOption.TCP_NODELAY, true)
-                    .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
-                    // 设置水位线
-                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(32 * 1024, 64 * 1024))
-                    .channel(NioSocketChannel.class)
-                    .handler(new ChannelInitializer() {
+    private ClientConnect clientConnect;
 
-                        @Override
-                        protected void initChannel(Channel ch) throws Exception {
-                            ch.pipeline()
-                                    .addLast(new ByteFrameDecoder())
-                                    .addLast(new RequestMessageCodec()) // 请求与响应编解码器
-                                    .addLast(new HeartBeatEncoder()) // 心跳编码器
-                                    .addLast("logging", loggingHandler)
-                                    // 每隔 2s 发送一次心跳，超过三次没有收到响应，也就是三倍的心跳时间，重连
-                                    .addLast(new IdleStateHandler(2, 0, 0, TimeUnit.SECONDS))
-                                    .addLast(new HeartBeatPongHandler(NettyClient.this)) // 心跳编码器
-                                    .addLast(new ResponseMessageHandler(executor));
-                        }
-                    });
-        } catch (Exception e) {
-            log.error("rpc客户端启动失败！", e);
-            this.close();
-        }
+    public NettyClient(HostInfo hostInfo) {
+        this.hostInfo = hostInfo;
     }
 
-    public void close() {
-        if (nioEventLoopGroup != null) {
-            nioEventLoopGroup.shutdownGracefully();
+    public void open(Executor executor) {
+        try {
+            this.bootstrap = new Bootstrap();
+//            @Sharable
+            LoggingHandler loggingHandler = new LoggingHandler(LogLevel.INFO);
+            bootstrap.group(NIO_EVENT_LOOP_GROUP)
+                .option(ChannelOption.SO_KEEPALIVE, true)
+                .option(ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
+                // 设置水位线
+                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(32 * 1024, 64 * 1024))
+                .channel(NioSocketChannel.class)
+                .handler(new ChannelInitializer() {
+
+                    @Override
+                    protected void initChannel(Channel ch) throws Exception {
+                        ch.pipeline()
+                            .addLast(new ByteFrameDecoder())
+                            .addLast(new RequestMessageCodec()) // 请求与响应编解码器
+                            .addLast(new HeartBeatEncoder()) // 心跳编码器
+                            .addLast("logging", loggingHandler)
+                            // 每隔 2s 发送一次心跳，超过三次没有收到响应，也就是三倍的心跳时间，重连
+                            .addLast(new IdleStateHandler(2, 0, 0, TimeUnit.SECONDS))
+                            .addLast(new HeartBeatPongHandler(NettyClient.this)) // 心跳编码器
+                            .addLast(new ResponseMessageHandler(executor));
+                    }
+                });
+        } catch (Exception e) {
+            log.error("rpc客户端启动失败！", e);
         }
     }
 
     /**
      * 连接
      *
-     * @param hostIp
-     * @param port
      * @return
      */
-    public Channel syncConnect(String hostIp, int port) throws InterruptedException {
-        Channel channel = this.bootstrap.connect(hostIp, port).addListener(future -> {
+    public ClientConnect syncConnect() throws InterruptedException {
+        Channel channel = this.bootstrap.connect(hostInfo.getHost(), hostInfo.getPort()).addListener(future -> {
             if (!future.isSuccess()) {
-                log.error("连接 {}:{} 失败！", hostIp, port);
+                log.error("连接 {}:{} 失败！", hostInfo.getHost(), hostInfo.getPort());
             }
         }).sync().channel();
 
-        return channel;
+        this.clientConnect = new ClientConnect(channel, hostInfo);
+        return this.clientConnect;
     }
 
-    public ChannelFuture reconnect(SocketAddress remoteAddress) {
-        return this.bootstrap.connect(remoteAddress);
+    public ChannelFuture reconnect() {
+        return this.bootstrap.connect(hostInfo.getHost(), hostInfo.getPort());
     }
 
-    public ChannelFuture reconnect(String hostIp, int port) {
-        return this.bootstrap.connect(hostIp, port);
+    public ClientConnect getClientConnect() {
+        return this.clientConnect;
+    }
+
+    public HostInfo getHostInfo() {
+        return this.hostInfo;
     }
 }

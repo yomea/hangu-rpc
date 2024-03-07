@@ -1,5 +1,7 @@
 package com.hangu.provider.manager;
 
+import cn.hutool.core.net.NetUtil;
+import com.hangu.common.entity.HostInfo;
 import com.hangu.provider.properties.ProviderProperties;
 import com.hangu.provider.server.NettyServer;
 import java.util.Objects;
@@ -14,6 +16,7 @@ public class NettyServerSingleManager {
     private static final Object SERVER_LOCK = new Object();
 
     private static volatile NettyServer NETTY_SERVER;
+    private static HostInfo LOCAL_HOST;
 
     public static final NettyServer openServer(Executor executor, ProviderProperties properties) {
 
@@ -24,6 +27,10 @@ public class NettyServerSingleManager {
             if (Objects.nonNull(NETTY_SERVER)) {
                 return NETTY_SERVER;
             }
+            HostInfo hostInfo = new HostInfo();
+            hostInfo.setHost(NetUtil.getLocalhost().getHostAddress());
+            hostInfo.setPort(properties.getPort());
+            LOCAL_HOST = hostInfo;
             NETTY_SERVER = new NettyServer();
             NETTY_SERVER.start(properties, executor);
         }
@@ -35,8 +42,12 @@ public class NettyServerSingleManager {
         return NETTY_SERVER;
     }
 
+    public static final HostInfo getLocalHost() {
+        return LOCAL_HOST;
+    }
+
     public static final void closeServer() {
-        if(Objects.nonNull(NETTY_SERVER)) {
+        if (Objects.nonNull(NETTY_SERVER)) {
             NETTY_SERVER.close();
         }
     }

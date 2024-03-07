@@ -27,7 +27,8 @@ public class FormDataMethodArgumentResolver extends AbstractMethodArgumentResolv
     }
 
     @Override
-    public boolean support(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+    public boolean support(Parameter parameter, HttpServletRequest httpServletRequest,
+        HttpServletResponse httpServletResponse) {
         String contentType = StringUtils.trimToEmpty(httpServletRequest.getHeads().get("content-type"));
         Class<?> type = parameter.getType();
         return !ClassUtils.isPrimitiveOrWrapper(type)
@@ -37,7 +38,8 @@ public class FormDataMethodArgumentResolver extends AbstractMethodArgumentResolv
     }
 
     @Override
-    public Object resolver(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+    public Object resolver(Parameter parameter, HttpServletRequest httpServletRequest,
+        HttpServletResponse httpServletResponse) {
 
         Constructor<?> ctor = BeanUtils.getResolvableConstructor(parameter.getType());
         Object target = BeanUtils.instantiateClass(ctor);

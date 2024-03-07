@@ -10,7 +10,9 @@ import java.lang.reflect.Parameter;
  */
 public interface MethodArgumentResolver {
 
-    boolean support(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse);
+    boolean support(Parameter parameter, HttpServletRequest httpServletRequest,
+        HttpServletResponse httpServletResponse);
 
-    Object resolver(Parameter parameter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse);
+    Object resolver(Parameter parameter, HttpServletRequest httpServletRequest,
+        HttpServletResponse httpServletResponse);
 }

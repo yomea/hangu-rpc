@@ -1,8 +1,6 @@
 package com.hangu.provider.resolver;
 
-import com.hangu.common.entity.HttpServletRequest;
 import com.hangu.provider.binder.WebDataBinder;
-import java.lang.reflect.Parameter;
 import java.util.Objects;
 import org.springframework.core.convert.ConversionService;
 
@@ -15,7 +13,7 @@ public abstract class AbstractMethodArgumentResolver implements MethodArgumentRe
     protected ConversionService conversionService;
 
     public AbstractMethodArgumentResolver(ConversionService conversionService) {
-        if(Objects.isNull(conversionService)) {
+        if (Objects.isNull(conversionService)) {
             this.conversionService = WebDataBinder.CONVERSION_SERVICE;
         } else {
             this.conversionService = conversionService;
