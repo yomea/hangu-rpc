@@ -202,7 +202,12 @@ public class RedisRegistryService extends AbstractRegistryService {
             if (Objects.isNull(hostMap) || hostMap.isEmpty()) {
                 return;
             }
-            List<HostInfo> hostInfoList = hostMap.keySet().stream().map(str -> {
+            long currentTime = System.currentTimeMillis();
+            List<HostInfo> hostInfoList = hostMap.entrySet().stream().filter(entry -> {
+                Long expire = Long.parseLong(entry.getValue());
+                return currentTime <= expire;
+            }).map(entry -> {
+                String str = entry.getKey();
                 String[] arr = str.split(":");
                 String host = arr[0];
                 Integer port = Integer.parseInt(arr[1]);

@@ -21,7 +21,7 @@ public class ClientConnect {
     /**
      * 标记为释放，接收到注册中心的通知，次机器下线，这个值设置为true
      */
-    private boolean release;
+    private volatile boolean release;
 
     public ClientConnect(Channel channel, HostInfo hostInfo) {
         this.channel = channel;

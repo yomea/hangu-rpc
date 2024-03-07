@@ -97,7 +97,7 @@ public class HeartBeatPongHandler extends ChannelInboundHandlerAdapter {
       // 读超时，发送心跳
       if (IdleState.READER_IDLE == idleState) {
         if (retryBeat > 3) {
-          // 关闭重连，通过监听 channelInactive 发起重连
+          // 关闭重连，通过监听 channelUnregistered 发起重连
           ctx.channel().close();
         } else {
           PingPong pingPong = new PingPong();

@@ -62,6 +62,9 @@ public class ConnectManager implements RegistryNotifyListener {
      * @param hostInfoList
      */
     private synchronized void cacheRegistoryConnect(List<HostInfo> hostInfoList) {
+        if(CollectionUtil.isEmpty(hostInfoList)) {
+            return;
+        }
         // 筛选出活着的通道
         List<ClientConnect> activeChannelList = this.KEY_CHANNELS.stream().filter(ClientConnect::isActive)
             .collect(Collectors.toList());
