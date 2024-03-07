@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -62,9 +63,7 @@ public class ConnectManager implements RegistryNotifyListener {
      * @param hostInfoList
      */
     private synchronized void cacheRegistoryConnect(List<HostInfo> hostInfoList) {
-        if(CollectionUtil.isEmpty(hostInfoList)) {
-            return;
-        }
+        hostInfoList = Optional.ofNullable(hostInfoList).orElse(Collections.emptyList());
         // 筛选出活着的通道
         List<ClientConnect> activeChannelList = this.KEY_CHANNELS.stream().filter(ClientConnect::isActive)
             .collect(Collectors.toList());
