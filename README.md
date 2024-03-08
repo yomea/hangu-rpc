@@ -30,7 +30,7 @@ hangu 是函谷的拼音。
 
 ```java
 /**
- * 代码位置{@link com.hangu.consumer.client.NettyClient#start}
+ * 代码位置{@link com.hangu.rpc.consumer.client.NettyClient#open}
  */
 // 省略前部分代码
 .addLast(new ByteFrameDecoder())
@@ -125,6 +125,7 @@ public class HeartBeatPongHandler extends ChannelInboundHandlerAdapter {
     int retryConnectCount = clientConnect.incrConnCount();
     // N次之后还是不能连接上，放弃连接
     if (clientConnect.isRelease()) {
+      log.info("该链接{}已经被标记为释放，不再重连", clientConnect.getHostInfo());
       return;
     }
     // 如果连接还活着，不需要重连
@@ -154,7 +155,7 @@ userEventTriggered 方法接收到读超时事件后，会判断当前连接是�
 
 ```java
 /**
- * 代码位置{@link com.hangu.provider.server.NettyServer#start}
+ * 代码位置{@link com.hangu.rpc.provider.server.NettyServer.start}
  */
 // 读写时间超过8s，表示该链接已失效
 .addLast(new IdleStateHandler(0, 0, 8, TimeUnit.SECONDS))
@@ -176,7 +177,7 @@ hangu-demo里有两个子模块，分别是提供者和消费者，启动这两�
 
 ```xml
 <dependency>
-      <groupId>org.hangu</groupId>
+      <groupId>org.hangu.rpc</groupId>
       <artifactId>hangu-rpc-spring-boot-starter</artifactId>
       <version>1.0-SNAPSHOT</version>
     </dependency>
@@ -216,7 +217,7 @@ hangu:
         password: yyy
 ```
 
-如果你有自己的注册中心，可以选择实现 com.hangu.common.registry.RegistryService 接口，然后将
+如果你有自己的注册中心，可以选择实现 com.hangu.rpc.common.registry.RegistryService 接口，然后将
 hangu.rpc.registry.protocol=你自己的注册中心名字（其实这里本人使用的时springboot的@ConditionalOnProperty去动态加载，
 也就是说你只要
 保证spring容器中只存在一个实现了RegistryService接口的注册服务即可）
@@ -309,7 +310,7 @@ public class HanguRpcBootstrapConfig {
 
 ```xml
 <dependency>
-  <groupId>org.hangu</groupId>
+  <groupId>org.hangu.rpc</groupId>
   <artifactId>hangu-starter</artifactId>
   <version>1.0-SNAPSHOT</version>
 </dependency>
