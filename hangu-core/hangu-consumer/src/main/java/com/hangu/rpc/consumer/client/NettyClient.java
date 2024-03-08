@@ -40,6 +40,8 @@ public class NettyClient {
 
     public NettyClient(HostInfo hostInfo) {
         this.hostInfo = hostInfo;
+        // 初始化客户端连接
+        this.clientConnect = new ClientConnect(null, hostInfo, 20);
     }
 
     public void open(Executor executor) {
@@ -86,8 +88,7 @@ public class NettyClient {
                 log.error("连接 {}:{} 失败！", hostInfo.getHost(), hostInfo.getPort());
             }
         }).sync().channel();
-
-        this.clientConnect = new ClientConnect(channel, hostInfo);
+        this.clientConnect.setChannel(channel);
         return this.clientConnect;
     }
 
