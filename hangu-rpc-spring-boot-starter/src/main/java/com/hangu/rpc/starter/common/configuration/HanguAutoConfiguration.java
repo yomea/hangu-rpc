@@ -2,16 +2,18 @@ package com.hangu.rpc.starter.common.configuration;
 
 import com.hangu.rpc.common.manager.HanguExecutorManager;
 import com.hangu.rpc.common.properties.HanguProperties;
-import com.hangu.rpc.starter.common.properties.JedisConfigPropertis;
 import com.hangu.rpc.common.properties.ZookeeperConfigProperties;
 import com.hangu.rpc.common.registry.RedisRegistryService;
 import com.hangu.rpc.common.registry.RegistryService;
 import com.hangu.rpc.common.registry.ZookeeperRegistryService;
+import com.hangu.rpc.starter.common.properties.JedisConfigPropertis;
+import com.hangu.rpc.starter.common.register.HanguRegistryService;
 import com.hangu.rpc.starter.consumer.configuration.ConsumerConfiguration;
 import com.hangu.rpc.starter.provider.configuration.ProviderConfiguration;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.Executor;
+import org.hangu.center.discover.client.DiscoverClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -100,5 +102,16 @@ public class HanguAutoConfiguration {
             return new ZookeeperRegistryService(zookeeperConfigProperties);
         }
 
+    }
+
+    @ConditionalOnProperty(prefix = "hangu.rpc.registry", name = "protocol", havingValue = "hangu-register")
+    @Configuration(proxyBeanMethods = false)
+    public class HanguRegistryConfiguration {
+
+        @Bean(destroyMethod = "close")
+        @ConditionalOnMissingBean(RegistryService.class)
+        public RegistryService hanguRegistryService(DiscoverClient discoverClient) {
+            return new HanguRegistryService(discoverClient);
+        }
     }
 }

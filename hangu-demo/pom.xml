@@ -78,6 +78,12 @@
       </exclusions>
     </dependency>
 
+    <dependency>
+      <groupId>org.hangu.center</groupId>
+      <artifactId>hangu-client</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+
   </dependencies>
 
 </project>

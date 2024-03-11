@@ -5,7 +5,7 @@ hangu:
     provider:
       port: 8089 # 提供者将要暴露的端口
     registry:
-      protocol: zookeeper # 选择zk作为注册中心
+      protocol: hangu-register # 选择zk作为注册中心
       redis:
         nodes: ip:port,ip2:port2 # redis哨兵模式哨兵集群地址
         master: xxx # master的名字
@@ -14,3 +14,6 @@ hangu:
         hosts: ip:port,ip2:port2 # zk集群地址
         user-name: yyy
         password: yyy
+
+  center:
+    peer-node-hosts: localhost:9991

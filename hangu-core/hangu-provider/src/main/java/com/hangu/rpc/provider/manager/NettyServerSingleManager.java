@@ -18,6 +18,14 @@ public class NettyServerSingleManager {
     private static volatile NettyServer NETTY_SERVER;
     private static HostInfo LOCAL_HOST;
 
+    public static final HostInfo bindLocalHost(ProviderProperties properties) {
+        HostInfo hostInfo = new HostInfo();
+        hostInfo.setHost(NetUtil.getLocalhost().getHostAddress());
+        hostInfo.setPort(properties.getPort());
+        LOCAL_HOST = hostInfo;
+        return LOCAL_HOST;
+    }
+
     public static final NettyServer openServer(Executor executor, ProviderProperties properties) {
 
         if (Objects.nonNull(NETTY_SERVER)) {
@@ -27,10 +35,7 @@ public class NettyServerSingleManager {
             if (Objects.nonNull(NETTY_SERVER)) {
                 return NETTY_SERVER;
             }
-            HostInfo hostInfo = new HostInfo();
-            hostInfo.setHost(NetUtil.getLocalhost().getHostAddress());
-            hostInfo.setPort(properties.getPort());
-            LOCAL_HOST = hostInfo;
+            bindLocalHost(properties);
             NETTY_SERVER = new NettyServer();
             NETTY_SERVER.start(properties, executor);
         }
