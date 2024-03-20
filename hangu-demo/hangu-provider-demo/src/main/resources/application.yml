@@ -16,4 +16,4 @@ hangu:
         password: yyy
 
   center:
-    peer-node-hosts: localhost:9991
+    peer-node-hosts: localhost:9991,localhost:9992
