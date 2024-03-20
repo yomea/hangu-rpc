@@ -80,7 +80,7 @@
 
     <dependency>
       <groupId>org.hangu.center</groupId>
-      <artifactId>hangu-client</artifactId>
+      <artifactId>hangu-register-spring-boot-starter</artifactId>
       <version>1.0-SNAPSHOT</version>
     </dependency>
 
