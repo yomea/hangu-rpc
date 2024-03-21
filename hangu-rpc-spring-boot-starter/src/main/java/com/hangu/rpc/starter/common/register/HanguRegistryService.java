@@ -2,6 +2,7 @@ package com.hangu.rpc.starter.common.register;
 
 import com.hangu.rpc.common.entity.HostInfo;
 import com.hangu.rpc.common.entity.RegistryInfo;
+import com.hangu.rpc.common.entity.RegistryNotifyInfo;
 import com.hangu.rpc.common.entity.ServerInfo;
 import com.hangu.rpc.common.listener.RegistryNotifyListener;
 import com.hangu.rpc.common.registry.AbstractRegistryService;
@@ -39,8 +40,23 @@ public class HanguRegistryService extends AbstractRegistryService {
 
     @Override
     public List<HostInfo> doSubscribe(RegistryNotifyListener listener, ServerInfo serverInfo) {
-
-        // TODO：待完善
+        org.hangu.center.common.entity.ServerInfo si = new org.hangu.center.common.entity.ServerInfo();
+        si.setGroupName(serverInfo.getGroupName());
+        si.setInterfaceName(serverInfo.getInterfaceName());
+        si.setVersion(serverInfo.getVersion());
+        // 第一次订阅，会主动通知
+        client.subscribe(si, registryInfoList -> {
+            RegistryNotifyInfo notifyInfo = new RegistryNotifyInfo();
+            notifyInfo.setServerInfo(serverInfo);
+            List<HostInfo> hostInfoList = registryInfoList.stream().map(registryInfo -> {
+                HostInfo hostInfo = new HostInfo();
+                hostInfo.setHost(registryInfo.getHostInfo().getHost());
+                hostInfo.setPort(registryInfo.getHostInfo().getPort());
+                return hostInfo;
+            }).collect(Collectors.toList());
+            notifyInfo.setHostInfos(hostInfoList);
+            listener.registryNotify(notifyInfo);
+        });
         return Collections.emptyList();
     }
 
