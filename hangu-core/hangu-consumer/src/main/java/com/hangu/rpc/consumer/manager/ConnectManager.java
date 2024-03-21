@@ -97,7 +97,7 @@ public class ConnectManager implements RegistryNotifyListener {
                 log.error("连接失败，跳过", e);
             }
             return clientConnect;
-        }).collect(Collectors.toList());
+        }).filter(Objects::nonNull).collect(Collectors.toList());
         activeChannelList.addAll(newConnectList);
         this.KEY_CHANNELS = activeChannelList;
     }
