@@ -46,14 +46,6 @@
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
     </dependency>
-
-    <dependency>
-      <groupId>org.hangu.center</groupId>
-      <artifactId>hangu-client</artifactId>
-      <version>1.0-SNAPSHOT</version>
-      <optional>true</optional>
-    </dependency>
-
   </dependencies>
 
 </project>

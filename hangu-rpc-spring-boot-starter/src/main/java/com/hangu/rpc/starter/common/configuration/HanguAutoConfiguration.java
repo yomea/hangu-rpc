@@ -7,13 +7,16 @@ import com.hangu.rpc.common.registry.RedisRegistryService;
 import com.hangu.rpc.common.registry.RegistryService;
 import com.hangu.rpc.common.registry.ZookeeperRegistryService;
 import com.hangu.rpc.starter.common.properties.JedisConfigPropertis;
-import com.hangu.rpc.starter.common.register.HanguRegistryService;
+import com.hangu.rpc.common.registry.HanguRegistryService;
 import com.hangu.rpc.starter.consumer.configuration.ConsumerConfiguration;
 import com.hangu.rpc.starter.provider.configuration.ProviderConfiguration;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.Executor;
 import org.hangu.center.discover.client.DiscoverClient;
+import org.hangu.center.discover.config.impl.ClientResponseHandlerConfigDefaultImpl;
+import org.hangu.center.discover.properties.ClientProperties;
+import org.hangu.center.discover.starter.CenterClientStarter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -107,6 +110,19 @@ public class HanguAutoConfiguration {
     @ConditionalOnProperty(prefix = "hangu.rpc.registry", name = "protocol", havingValue = "hangu-register")
     @Configuration(proxyBeanMethods = false)
     public class HanguRegistryConfiguration {
+
+        @Bean
+        @ConditionalOnMissingBean(ClientProperties.class)
+        @ConfigurationProperties(prefix = "hangu.center")
+        public ClientProperties clientProperties() {
+            return new ClientProperties();
+        }
+
+        @Bean(destroyMethod = "close")
+        public DiscoverClient discoverClient(ClientProperties clientProperties) {
+            DiscoverClient discoverClient = CenterClientStarter.start(clientProperties, Collections.singletonList(new ClientResponseHandlerConfigDefaultImpl()));
+            return discoverClient;
+        }
 
         @Bean(destroyMethod = "close")
         @ConditionalOnMissingBean(RegistryService.class)

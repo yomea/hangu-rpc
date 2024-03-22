@@ -1,4 +1,4 @@
-package com.hangu.rpc.starter.common.register;
+package com.hangu.rpc.common.registry;
 
 import com.hangu.rpc.common.entity.HostInfo;
 import com.hangu.rpc.common.entity.RegistryInfo;
@@ -78,11 +78,7 @@ public class HanguRegistryService extends AbstractRegistryService {
 
     @Override
     protected void doClose() {
-        try {
-            client.destroy();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        client.close();
     }
 
     private org.hangu.center.common.entity.RegistryInfo toCenterRegistryInfo(RegistryInfo registryInfo) {
