@@ -78,7 +78,11 @@ public class HanguRegistryService extends AbstractRegistryService {
 
     @Override
     protected void doClose() {
-//        client.close();
+        try {
+            client.destroy();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private org.hangu.center.common.entity.RegistryInfo toCenterRegistryInfo(RegistryInfo registryInfo) {
