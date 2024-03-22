@@ -13,7 +13,8 @@
 
 该框架为rpc原理学习者提供一个思路，一个非常简单的轻量级rpc框架，
 项目中没有使用非常复杂的设计，主打一个简单易用，快速上手，读懂源码实现，目前
-注册中心默认实现了redis哨兵与zookeeper版本（建议使用zookeeper作为注册中心）。
+注册中心默认实现了redis哨兵，zookeeper和本hangu系列的hangu-register注册中心
+（测试代码默认使用的是hangu-register注册中心）。
 如果你是一个对rpc原理好奇的人，你可以阅读本框架源码，快速了解rpc的核心实现。
 
 hangu 是函谷的拼音。
