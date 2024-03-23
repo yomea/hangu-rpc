@@ -6,7 +6,7 @@ import com.hangu.rpc.common.properties.ZookeeperConfigProperties;
 import com.hangu.rpc.common.registry.RedisRegistryService;
 import com.hangu.rpc.common.registry.RegistryService;
 import com.hangu.rpc.common.registry.ZookeeperRegistryService;
-import com.hangu.rpc.starter.common.properties.JedisConfigPropertis;
+import com.hangu.rpc.common.properties.JedisConfigPropertis;
 import com.hangu.rpc.common.registry.HanguRegistryService;
 import com.hangu.rpc.starter.consumer.configuration.ConsumerConfiguration;
 import com.hangu.rpc.starter.provider.configuration.ProviderConfiguration;
@@ -49,11 +49,15 @@ public class HanguAutoConfiguration {
 
     @ConditionalOnProperty(prefix = "hangu.rpc.registry", name = "protocol", havingValue = "redis")
     @Configuration(proxyBeanMethods = false)
-    @EnableConfigurationProperties(JedisConfigPropertis.class)
     public class RedisRegistryConfiguration {
 
-        @Autowired
-        private JedisConfigPropertis configPropertis;
+        @Bean
+        @ConditionalOnMissingBean(JedisConfigPropertis.class)
+        @ConfigurationProperties(prefix = "hangu.rpc.registry.redis")
+        public JedisConfigPropertis jedisConfigPropertis() {
+            JedisConfigPropertis properties = new JedisConfigPropertis();
+            return properties;
+        }
 
         @Bean
         @ConditionalOnMissingBean(JedisPoolConfig.class)
@@ -71,12 +75,12 @@ public class HanguAutoConfiguration {
 
         @Bean
         @ConditionalOnMissingBean(JedisSentinelPool.class)
-        public JedisSentinelPool jedisSentinelPool(JedisPoolConfig jedisPoolConfig) {
+        public JedisSentinelPool jedisSentinelPool(JedisPoolConfig jedisPoolConfig, JedisConfigPropertis jedisConfigPropertis) {
             HashSet<String> infos = new HashSet<>();
-            String[] split = configPropertis.getNodes().split(",");
+            String[] split = jedisConfigPropertis.getNodes().split(",");
             Collections.addAll(infos, split);
-            return new JedisSentinelPool(configPropertis.getMaster(), infos, jedisPoolConfig, 5000,
-                configPropertis.getPassword());
+            return new JedisSentinelPool(jedisConfigPropertis.getMaster(), infos, jedisPoolConfig, 5000,
+                jedisConfigPropertis.getPassword());
         }
 
         @Bean(destroyMethod = "close")
