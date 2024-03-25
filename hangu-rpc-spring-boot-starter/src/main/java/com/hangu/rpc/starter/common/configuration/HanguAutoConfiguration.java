@@ -123,7 +123,7 @@ public class HanguAutoConfiguration {
         }
 
         @Bean(destroyMethod = "close")
-        public DiscoverClient discoverClient(ClientProperties clientProperties) {
+        public DiscoverClient discoverClient(ClientProperties clientProperties) throws Exception {
             DiscoverClient discoverClient = CenterClientStarter.start(clientProperties, Collections.singletonList(new ClientResponseHandlerConfigDefaultImpl()));
             return discoverClient;
         }
