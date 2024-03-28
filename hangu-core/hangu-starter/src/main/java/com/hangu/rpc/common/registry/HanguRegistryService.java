@@ -5,7 +5,6 @@ import com.hangu.rpc.common.entity.RegistryInfo;
 import com.hangu.rpc.common.entity.RegistryNotifyInfo;
 import com.hangu.rpc.common.entity.ServerInfo;
 import com.hangu.rpc.common.listener.RegistryNotifyListener;
-import com.hangu.rpc.common.registry.AbstractRegistryService;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;

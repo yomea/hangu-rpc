@@ -1,8 +1,8 @@
 package com.hangu.rpc.demo.consumer;
 
-import com.hangu.rpc.demo.entity.Address;
 import com.hangu.rpc.common.entity.HttpServletRequest;
 import com.hangu.rpc.common.entity.HttpServletResponse;
+import com.hangu.rpc.demo.entity.Address;
 import com.hangu.rpc.demo.entity.UserInfo;
 import java.util.List;
 

@@ -1,8 +1,8 @@
 package com.hangu.rpc.starter.provider.configuration;
 
-import com.hangu.rpc.starter.provider.listener.ProviderApplicationListener;
 import com.hangu.rpc.provider.resolver.MethodArgumentResolver;
 import com.hangu.rpc.provider.resolver.MethodArgumentResolverHandler;
+import com.hangu.rpc.starter.provider.listener.ProviderApplicationListener;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.web.format.DateTimeFormatters;

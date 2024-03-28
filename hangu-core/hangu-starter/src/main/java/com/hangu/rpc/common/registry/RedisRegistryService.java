@@ -11,7 +11,6 @@ import com.hangu.rpc.common.entity.ServerInfo;
 import com.hangu.rpc.common.enums.ErrorCodeEnum;
 import com.hangu.rpc.common.exception.RpcInvokerException;
 import com.hangu.rpc.common.listener.RegistryNotifyListener;
-import com.hangu.rpc.common.registry.AbstractRegistryService;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
