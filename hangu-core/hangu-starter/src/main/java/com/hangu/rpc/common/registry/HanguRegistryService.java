@@ -44,17 +44,22 @@ public class HanguRegistryService extends AbstractRegistryService {
         si.setInterfaceName(serverInfo.getInterfaceName());
         si.setVersion(serverInfo.getVersion());
         // 第一次订阅，会主动通知
-        client.subscribe(si, registryInfoList -> {
-            RegistryNotifyInfo notifyInfo = new RegistryNotifyInfo();
-            notifyInfo.setServerInfo(serverInfo);
-            List<HostInfo> hostInfoList = registryInfoList.stream().map(registryInfo -> {
-                HostInfo hostInfo = new HostInfo();
-                hostInfo.setHost(registryInfo.getHostInfo().getHost());
-                hostInfo.setPort(registryInfo.getHostInfo().getPort());
-                return hostInfo;
+        client.subscribe(si, registryNotifyInfos -> {
+            List<RegistryNotifyInfo> notifyInfos = registryNotifyInfos.stream().map(registryNotifyInfo -> {
+                RegistryNotifyInfo notifyInfo = new RegistryNotifyInfo();
+                notifyInfo.setServerInfo(this.toCenterServerInfo(registryNotifyInfo.getServerInfo()));
+                List<org.hangu.center.common.entity.RegistryInfo> registryInfoList =
+                    Optional.ofNullable(registryNotifyInfo.getRegistryInfos()).orElse(Collections.emptyList());
+                List<HostInfo> hostInfoList = registryInfoList.stream().map(registryInfo -> {
+                    HostInfo hostInfo = new HostInfo();
+                    hostInfo.setHost(registryInfo.getHostInfo().getHost());
+                    hostInfo.setPort(registryInfo.getHostInfo().getPort());
+                    return hostInfo;
+                }).collect(Collectors.toList());
+                notifyInfo.setHostInfos(hostInfoList);
+                return notifyInfo;
             }).collect(Collectors.toList());
-            notifyInfo.setHostInfos(hostInfoList);
-            listener.registryNotify(notifyInfo);
+            notifyInfos.stream().forEach(listener::registryNotify);
         });
         return Collections.emptyList();
     }
@@ -101,6 +106,14 @@ public class HanguRegistryService extends AbstractRegistryService {
 
     private LookupServer toCenterLookServerInfo(ServerInfo serverInfo) {
         LookupServer lookupServer = new LookupServer();
+        lookupServer.setGroupName(serverInfo.getGroupName());
+        lookupServer.setVersion(serverInfo.getVersion());
+        lookupServer.setInterfaceName(serverInfo.getInterfaceName());
+        return lookupServer;
+    }
+
+    private ServerInfo toCenterServerInfo(org.hangu.center.common.entity.ServerInfo serverInfo) {
+        ServerInfo lookupServer = new ServerInfo();
         lookupServer.setGroupName(serverInfo.getGroupName());
         lookupServer.setVersion(serverInfo.getVersion());
         lookupServer.setInterfaceName(serverInfo.getInterfaceName());
