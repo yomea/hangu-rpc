@@ -25,7 +25,7 @@ public final class CommonUtils {
 
     public static Long snowFlakeNextId() {
 
-        return IdUtil.createSnowflake(1, 1).nextId();
+        return IdUtil.getSnowflake(1, 1).nextId();
     }
 
     public static String createServiceKey(String groupName, String interfaceName, String version) {
