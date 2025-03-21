@@ -77,6 +77,8 @@ public class ResponseMessageCodec extends MessageToMessageCodec<ByteBuf, Respons
         short magic = byteBuf.readShort();
         // 如果魔数不相等，那么认为这是一个无效的请求
         if (magic != hanguCons.MAGIC) {
+            // ByteBuf 在父类中会自动释放
+            // ReferenceCountUtil.release(byteBuf);
             return;
         }
         byte msgType = byteBuf.readByte();
