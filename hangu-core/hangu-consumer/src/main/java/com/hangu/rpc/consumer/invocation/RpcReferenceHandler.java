@@ -113,8 +113,10 @@ public class RpcReferenceHandler implements InvocationHandler {
         channel.writeAndFlush(request).addListener(wFuture -> {
             // 消息发送成功之后，保存请求
             if (!wFuture.isSuccess()) {
+                RpcInvokerException rpcInvokerException = new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "发送请求异常！");
+                future.tryFailure(rpcInvokerException);
                 log.error("发送请求失败！");
-                throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(), "发送请求异常！");
+                throw rpcInvokerException;
             }
         });
 
@@ -140,6 +142,21 @@ public class RpcReferenceHandler implements InvocationHandler {
                 });
             }, timeout, TimeUnit.SECONDS);
             return null;
+        }
+
+        if (future.isDone() && !future.isSuccess()) {
+            Throwable cause = future.cause();
+            if (Objects.nonNull(cause)) {
+                if (cause instanceof RpcInvokerException) {
+                    throw cause;
+                } else {
+                    throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(),
+                        "发送请求异常！");
+                }
+            } else {
+                throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(),
+                    "发送请求异常！");
+            }
         }
 
         if (!future.await(timeout, TimeUnit.SECONDS)) {
