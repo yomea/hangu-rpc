@@ -144,6 +144,11 @@ public class RpcReferenceHandler implements InvocationHandler {
             return null;
         }
 
+        if (!future.await(timeout, TimeUnit.SECONDS)) {
+            log.error("请求超时！");
+            throw new RpcInvokerException(ErrorCodeEnum.TIME_OUT.getCode(), "请求超时！");
+        }
+
         if (future.isDone() && !future.isSuccess()) {
             Throwable cause = future.cause();
             if (Objects.nonNull(cause)) {
@@ -157,11 +162,6 @@ public class RpcReferenceHandler implements InvocationHandler {
                 throw new RpcInvokerException(ErrorCodeEnum.FAILURE.getCode(),
                     "发送请求异常！");
             }
-        }
-
-        if (!future.await(timeout, TimeUnit.SECONDS)) {
-            log.error("请求超时！");
-            throw new RpcInvokerException(ErrorCodeEnum.TIME_OUT.getCode(), "请求超时！");
         }
 
         RpcResult rpcResult = future.getNow();
