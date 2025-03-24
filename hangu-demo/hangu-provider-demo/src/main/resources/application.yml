@@ -7,6 +7,7 @@ hangu:
     registry:
       protocol: hangu-register # 选择 hangu-register 作为注册中心，如果是自己提供注册中心，这里填 none 即可
       redis:
+        publicChannel: xxx
         nodes: ip:port,ip2:port2 # redis哨兵模式哨兵集群地址
         master: xxx # master的名字
         password: xxx # redis的密码

@@ -30,12 +30,12 @@ public abstract class AbstractRegistryService implements RegistryService {
 
     @Override
     public void subscribe(RegistryNotifyListener listener, ServerInfo serverInfo) {
+        subscriberMap.put(serverInfo, listener);
         List<HostInfo> hostInfoList = this.doSubscribe(listener, serverInfo);
         RegistryNotifyInfo notifyInfo = new RegistryNotifyInfo();
         notifyInfo.setServerInfo(serverInfo);
         notifyInfo.setHostInfos(hostInfoList);
         listener.registryNotify(notifyInfo);
-        subscriberMap.put(serverInfo, listener);
     }
 
     protected abstract List<HostInfo> doSubscribe(RegistryNotifyListener listener, ServerInfo serverInfo);

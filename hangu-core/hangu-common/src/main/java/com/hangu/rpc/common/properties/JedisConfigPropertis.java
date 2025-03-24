@@ -9,6 +9,7 @@ import lombok.Data;
 @Data
 public class JedisConfigPropertis {
 
+    private String publicChannel;
     private String nodes;
     private String master;
     private String password;
