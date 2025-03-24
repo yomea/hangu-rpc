@@ -83,8 +83,8 @@ public class HanguAutoConfiguration {
 
         @Bean(destroyMethod = "close")
         @ConditionalOnMissingBean(RegistryService.class)
-        public RegistryService redisRegistryService(JedisSentinelPool jedisSentinelPool) {
-            return new RedisRegistryService(jedisSentinelPool);
+        public RegistryService redisRegistryService(JedisSentinelPool jedisSentinelPool, JedisConfigPropertis jedisConfigPropertis) {
+            return new RedisRegistryService(jedisSentinelPool, jedisConfigPropertis.getPublicChannel());
         }
 
     }
