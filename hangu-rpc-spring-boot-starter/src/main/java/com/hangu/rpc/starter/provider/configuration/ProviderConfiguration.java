@@ -29,7 +29,6 @@ public class ProviderConfiguration {
             .dateTimeFormat("yyyy-MM-dd HH:mm:ss")
             .dateFormat("yyyy-MM-dd")
             .timeFormat("HH:mm:ss");
-        dateTimeFormatters.dateFormat("yyyy-MM-dd");
         ConfigurableConversionService conversionService = new WebConversionService(dateTimeFormatters);
 //        conversionService.addConverter(new StringToCharConverter());
         return conversionService;
