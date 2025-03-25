@@ -1,5 +1,6 @@
 package com.hangu.rpc.starter.provider.listener;
 
+import com.google.common.collect.Lists;
 import com.hangu.rpc.common.entity.RegistryInfo;
 import com.hangu.rpc.common.manager.HanguRpcManager;
 import com.hangu.rpc.common.properties.HanguProperties;
@@ -46,6 +47,7 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
         }
         RegistryService registryService = applicationContext.getBean(RegistryService.class);
         HanguRpcManager.openServer(hanguProperties);
+        List<RegistryInfo> pendingRegistoryList = Lists.newArrayList();
         beanNameMapServiceMap.forEach((beanName, service) -> {
             HanguService hanguService = AnnotationUtils.getAnnotation(service.getClass(), HanguService.class);
             String groupName = hanguService.groupName();
@@ -77,9 +79,14 @@ public class ProviderApplicationListener implements ApplicationListener<ContextR
                 registryInfo.setInterfaceName(intName);
                 registryInfo.setVersion(version);
                 registryInfo.setHostInfo(NettyServerSingleManager.getLocalHost());
-                registryService.register(registryInfo);
+                pendingRegistoryList.add(registryInfo);
             });
         });
+        if(!CollectionUtils.isEmpty(pendingRegistoryList)) {
+            // TODO：注册中心批量注册，注册接口暂时还没提供批量的接口，等有空再搞
+            Lists.partition(pendingRegistoryList, 100)
+                .forEach(l -> l.forEach(registryService::register));
+        }
     }
 
     @Override
